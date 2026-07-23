@@ -144,12 +144,15 @@
                         <img src="assets/financaPro_logo_horizontal_texto_branco.png" alt="FinançasPro" class="h-9 w-auto">
                         <p class="text-[10px] text-blue-300 font-semibold uppercase tracking-wider mt-0.5">Por Utopia Desenvolvimentos</p>
                     </div>
+                    <button onclick="startAppTour()" title="Tour guiado" class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-sky-300 transition-all border border-white/20">
+                        <i class="fa-solid fa-circle-question"></i>
+                    </button>
                 </div>
                 
                 <!-- Controls: Year Selector, Tutorial, Backup, Logout (desktop only — mobile uses bottom nav + "Mais") -->
                 <div class="hidden sm:flex flex-wrap items-center gap-2 sm:gap-3">
                     <!-- Year selector -->
-                    <div class="flex items-center bg-white/10 rounded-xl px-3 py-1.5 border border-white/25">
+                    <div class="flex items-center bg-white/10 rounded-xl px-3 py-1.5 border border-white/25" data-tour-target="year-desktop">
                         <span class="text-xs font-semibold uppercase text-blue-200 mr-2">Ano:</span>
                         <button onclick="changeYear(-1)" class="hover:text-blue-300 px-1 transition-colors"><i class="fa-solid fa-chevron-left"></i></button>
                         <input type="number" id="yearInput" value="2026" min="2000" max="2100" class="bg-transparent text-center font-bold text-white w-14 focus:outline-none focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" onchange="handleYearChange(this.value)">
@@ -157,12 +160,12 @@
                     </div>
 
                     <!-- Tutorial button -->
-                    <button onclick="openTutorialModal()" class="bg-sky-500/20 hover:bg-sky-500/35 text-sky-100 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 border border-sky-400/30 cursor-pointer">
+                    <button onclick="startAppTour()" class="bg-sky-500/20 hover:bg-sky-500/35 text-sky-100 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 border border-sky-400/30 cursor-pointer">
                         <i class="fa-solid fa-circle-question text-sky-300"></i> Tutorial de Uso
                     </button>
 
                     <!-- Invoice AI Importer Trigger -->
-                    <button onclick="openInvoiceImportModal()" class="bg-violet-500/20 hover:bg-violet-500/35 text-violet-100 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 border border-violet-400/30 cursor-pointer">
+                    <button onclick="openInvoiceImportModal()" data-tour-target="import-invoice-desktop" class="bg-violet-500/20 hover:bg-violet-500/35 text-violet-100 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 border border-violet-400/30 cursor-pointer">
                         <i class="fa-solid fa-file-invoice text-violet-300"></i> Importar Fatura
                     </button>
 
@@ -374,7 +377,7 @@
                         </div>
 
                         <!-- Carryover Switch Box -->
-                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100" data-tour-target="carryover">
                             <div class="flex items-start justify-between gap-3">
                                 <div class="text-xs">
                                     <p class="text-slate-800 font-bold text-sm">Carregar Sobra de Caixa</p>
@@ -779,75 +782,21 @@
         </div>
     </div>
 
-    <!-- MODAL 7: Guia de Tutorial Passo a Passo -->
-    <div id="tutorialModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center opacity-0 pointer-events-none transition-all duration-200">
-        <div class="bg-white rounded-3xl shadow-2xl max-w-xl w-full mx-4 overflow-hidden transform scale-95 transition-transform duration-200" id="tutorialContainer">
-            <!-- Header -->
-            <div class="px-6 py-4 bg-gradient-to-r from-blue-700 to-indigo-800 text-white flex justify-between items-center">
-                <h3 class="font-bold flex items-center gap-2 text-sm sm:text-base">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> Guia Rápido: FinançasPro
-                </h3>
-                <button onclick="closeTutorialModal()" class="text-white/80 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <!-- Content Slides -->
-            <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto text-xs sm:text-sm text-slate-600 leading-relaxed">
-                <!-- Tabs Indicator -->
-                <div class="flex gap-2 border-b border-slate-100 pb-3 justify-center">
-                    <button onclick="switchTutorialSlide(1)" id="tSlideBtn-1" class="w-8 h-8 rounded-full font-bold text-xs flex items-center justify-center bg-blue-600 text-white">1</button>
-                    <button onclick="switchTutorialSlide(2)" id="tSlideBtn-2" class="w-8 h-8 rounded-full font-bold text-xs flex items-center justify-center bg-slate-100 text-slate-500">2</button>
-                    <button onclick="switchTutorialSlide(3)" id="tSlideBtn-3" class="w-8 h-8 rounded-full font-bold text-xs flex items-center justify-center bg-slate-100 text-slate-500">3</button>
-                    <button onclick="switchTutorialSlide(4)" id="tSlideBtn-4" class="w-8 h-8 rounded-full font-bold text-xs flex items-center justify-center bg-slate-100 text-slate-500">4</button>
-                </div>
-
-                <!-- Slide 1: Welcome & Setup -->
-                <div id="tSlide-1" class="space-y-3">
-                    <h4 class="font-bold text-slate-800 text-base">Boas-vindas ao FinançasPro!</h4>
-                    <p>Esta aplicação foi planejada pela equipe da <strong>Utopia Desenvolvimentos</strong> para ser sua ferramenta definitiva de controle financeiro. Todas as suas informações são salvas de forma privada e segura no seu próprio dispositivo.</p>
-                    <ul class="list-disc pl-5 space-y-1 text-xs">
-                        <li><strong>Visão Anual Flexível:</strong> Altere o ano no cabeçalho. Cada ano cria e gerencia uma planilha totalmente individual.</li>
-                        <li><strong>Controle do Mês Atual:</strong> Preencha valores de entradas e saídas e categorize como quiser nas tabelas dinâmicas.</li>
-                    </ul>
-                </div>
-
-                <!-- Slide 2: Credit Card Annual Sync -->
-                <div id="tSlide-2" class="space-y-3 hidden">
-                    <h4 class="font-bold text-slate-800 text-base">Gestão de Cartões Integrada</h4>
-                    <p>Facilitamos o planejamento do seu limite e faturas através de uma aba centralizada de faturas anuais.</p>
-                    <ul class="list-disc pl-5 space-y-1 text-xs">
-                        <li>Acesse a aba <strong>"Fatura Anual de Cartões"</strong> para lançar faturas futuras de cartões como Itaú, Nubank, Inter, Mercado Pago, Pernambucanas, Santander ou outros criados por você.</li>
-                        <li>O somatório de faturas alimenta <strong>automaticamente</strong> as saídas da tela inicial do respectivo mês.</li>
-                    </ul>
-                </div>
-
-                <!-- Slide 3: Carryover Mechanism -->
-                <div id="tSlide-3" class="space-y-3 hidden">
-                    <h4 class="font-bold text-slate-800 text-base">Fluxo Contínuo de Caixa</h4>
-                    <p>Diga adeus à digitação redundante ao virar o mês:</p>
-                    <ul class="list-disc pl-5 space-y-1 text-xs">
-                        <li>Ativando o switch <strong>"Carregar Sobra de Caixa"</strong>, o superávit positivo de caixa de um mês é transportado para o mês seguinte como receita automática.</li>
-                        <li>Mudanças feitas no início do ano (ex: Janeiro) recalculam o ano todo em efeito cascata de alta velocidade!</li>
-                    </ul>
-                </div>
-
-                <!-- Slide 4: AI Invoice Import -->
-                <div id="tSlide-4" class="space-y-3 hidden">
-                    <h4 class="font-bold text-slate-800 text-base">Importando Fatura com IA</h4>
-                    <p>Chega de digitar item por item da fatura do cartão:</p>
-                    <ul class="list-disc pl-5 space-y-1 text-xs">
-                        <li>Clique em <strong>"Importar Fatura"</strong> na barra superior e envie a fatura em PDF, JPG ou PNG.</li>
-                        <li>A IA (Google Gemini) lê os lançamentos, sugere uma categoria para cada um e já preenche o total do cartão em <strong>"Fatura Anual de Cartões"</strong>.</li>
-                        <li>Revise, edite ou reclassifique cada item na aba <strong>"Gráficos & Diagnóstico"</strong>, em "Itens de Fatura por Categoria".</li>
-                    </ul>
-                </div>
-
-                <!-- Footer button modal -->
-                <div class="pt-4 flex justify-between items-center border-t border-slate-100">
-                    <button onclick="closeTutorialModal()" class="px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-700">Pular Guia</button>
-                    <button onclick="nextTutorialSlide()" id="tutorialNextBtn" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-1.5">
-                        Avançar <i class="fa-solid fa-arrow-right"></i>
-                    </button>
-                </div>
-            </div>
+    <!-- Live guided tour: dims the screen and spotlights the real button being explained -->
+    <div id="tourBackdrop" class="fixed inset-0 bg-slate-900/60 z-[94] hidden"></div>
+    <div id="tourSpotlight" class="fixed hidden pointer-events-none z-[95] rounded-xl ring-4 ring-blue-500 transition-all duration-300" style="box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.6);"></div>
+    <div id="tourTooltip" class="fixed hidden z-[96] bg-white rounded-2xl shadow-2xl p-5 w-72 transition-all duration-300">
+        <div class="flex justify-between items-center mb-2">
+            <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider" id="tourStepLabel">Passo 1 de 4</span>
+            <button onclick="endAppTour()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <h4 class="font-bold text-slate-800 text-sm mb-1" id="tourTitle"></h4>
+        <p class="text-xs text-slate-600 leading-relaxed mb-4" id="tourText"></p>
+        <div class="flex justify-between items-center">
+            <button onclick="prevTourStep()" id="tourPrevBtn" class="text-xs font-bold text-slate-400 hover:text-slate-600">Anterior</button>
+            <button onclick="nextTourStep()" id="tourNextBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-1.5">
+                Próximo <i class="fa-solid fa-arrow-right"></i>
+            </button>
         </div>
     </div>
 
@@ -863,7 +812,7 @@
             </div>
             <div class="p-4 space-y-3">
                 <!-- Year selector -->
-                <div class="flex items-center justify-between bg-slate-50 rounded-xl px-4 py-3 border border-slate-200">
+                <div class="flex items-center justify-between bg-slate-50 rounded-xl px-4 py-3 border border-slate-200" data-tour-target="year-mobile">
                     <span class="text-xs font-bold uppercase text-slate-500">Ano</span>
                     <div class="flex items-center gap-3">
                         <button onclick="changeYear(-1)" class="text-slate-500 hover:text-blue-600 p-1"><i class="fa-solid fa-chevron-left"></i></button>
@@ -872,11 +821,11 @@
                     </div>
                 </div>
 
-                <button onclick="closeMoreSheet(); openTutorialModal();" class="w-full flex items-center gap-3 bg-sky-50 hover:bg-sky-100 text-sky-700 font-semibold px-4 py-3 rounded-xl transition-all">
+                <button onclick="closeMoreSheet(); startAppTour();" class="w-full flex items-center gap-3 bg-sky-50 hover:bg-sky-100 text-sky-700 font-semibold px-4 py-3 rounded-xl transition-all">
                     <i class="fa-solid fa-circle-question w-4 text-center"></i> Tutorial de Uso
                 </button>
 
-                <button onclick="closeMoreSheet(); openInvoiceImportModal();" class="w-full flex items-center gap-3 bg-violet-50 hover:bg-violet-100 text-violet-700 font-semibold px-4 py-3 rounded-xl transition-all">
+                <button onclick="closeMoreSheet(); openInvoiceImportModal();" data-tour-target="import-invoice-mobile" class="w-full flex items-center gap-3 bg-violet-50 hover:bg-violet-100 text-violet-700 font-semibold px-4 py-3 rounded-xl transition-all">
                     <i class="fa-solid fa-file-invoice w-4 text-center"></i> Importar Fatura
                 </button>
 
@@ -954,7 +903,6 @@
 
         let appState = getDefaultAppState();
 
-        let currentTutorialSlide = 1;
 
         // Charts Memory References
         let evolutionChartInstance = null;
@@ -982,7 +930,7 @@
                     if (pendingAuthToast) {
                         showToast(pendingAuthToast.message, pendingAuthToast.icon, pendingAuthToast.color);
                         pendingAuthToast = null;
-                        setTimeout(openTutorialModal, 400);
+                        setTimeout(startAppTour, 400);
                     }
                 });
             } else {
@@ -1148,52 +1096,126 @@
             auth.signOut();
         }
 
-        // Tutorial Modal Control Functions
-        function openTutorialModal() {
-            currentTutorialSlide = 1;
-            switchTutorialSlide(1);
-            const modal = document.getElementById('tutorialModal');
-            const container = document.getElementById('tutorialContainer');
-            modal.classList.remove('opacity-0', 'pointer-events-none');
-            container.classList.remove('scale-95');
+        // Live Guided Tour — dims the screen and spotlights the real button being explained
+        const tourSteps = [
+            {
+                title: "Visão Anual Flexível",
+                text: "Troque o ano por aqui. Cada ano cria e gerencia uma planilha totalmente individual, com suas próprias categorias e valores.",
+                prepare: () => { switchView('geral'); if (isMobileLayout()) openMoreSheet(); else closeMoreSheet(); },
+                targets: ['[data-tour-target="year-desktop"]', '[data-tour-target="year-mobile"]']
+            },
+            {
+                title: "Gestão de Cartões Integrada",
+                text: 'Clique aqui para lançar a fatura de cada cartão mês a mês. O total entra automaticamente nas despesas do mês correspondente.',
+                prepare: () => { closeMoreSheet(); },
+                targets: ['#btnTabCartoes', '#btnTabCartoesMobile']
+            },
+            {
+                title: "Fluxo Contínuo de Caixa",
+                text: 'Ative esse switch para que o saldo positivo de um mês vire receita automática ("Sobra do Mês Anterior") no mês seguinte.',
+                prepare: () => { closeMoreSheet(); switchView('geral'); },
+                targets: ['[data-tour-target="carryover"]']
+            },
+            {
+                title: "Importando Fatura com IA",
+                text: 'Clique aqui, envie a fatura em PDF ou foto, e a IA (Google Gemini) lê e categoriza os lançamentos automaticamente.',
+                prepare: () => { if (isMobileLayout()) openMoreSheet(); else closeMoreSheet(); },
+                targets: ['[data-tour-target="import-invoice-desktop"]', '[data-tour-target="import-invoice-mobile"]']
+            }
+        ];
+        let currentTourStep = 0;
+
+        function isMobileLayout() {
+            return window.innerWidth < 640;
         }
 
-        function closeTutorialModal() {
-            const modal = document.getElementById('tutorialModal');
-            const container = document.getElementById('tutorialContainer');
-            modal.classList.add('opacity-0', 'pointer-events-none');
-            container.classList.add('scale-95');
-        }
-
-        function switchTutorialSlide(slideIndex) {
-            currentTutorialSlide = slideIndex;
-            for (let i = 1; i <= 4; i++) {
-                const slide = document.getElementById(`tSlide-${i}`);
-                const btn = document.getElementById(`tSlideBtn-${i}`);
-                if (i === slideIndex) {
-                    slide.classList.remove('hidden');
-                    btn.className = "w-8 h-8 rounded-full font-bold text-xs flex items-center justify-center bg-blue-600 text-white shadow-sm";
-                } else {
-                    slide.classList.add('hidden');
-                    btn.className = "w-8 h-8 rounded-full font-bold text-xs flex items-center justify-center bg-slate-100 text-slate-500 hover:bg-slate-200";
+        function pickVisibleTarget(selectors) {
+            for (const sel of selectors) {
+                const el = document.querySelector(sel);
+                if (el) {
+                    const r = el.getBoundingClientRect();
+                    if (r.width > 0 && r.height > 0) return el;
                 }
             }
+            return null;
+        }
 
-            const nextBtn = document.getElementById('tutorialNextBtn');
-            if (slideIndex === 4) {
-                nextBtn.innerHTML = 'Concluir Guia <i class="fa-solid fa-circle-check"></i>';
+        function startAppTour() {
+            currentTourStep = 0;
+            const toast = document.getElementById('toast');
+            toast.classList.remove('translate-y-0', 'opacity-100');
+            toast.classList.add('translate-y-20', 'opacity-0');
+            document.getElementById('tourBackdrop').classList.remove('hidden');
+            showTourStep(0);
+        }
+
+        function showTourStep(index) {
+            const step = tourSteps[index];
+            if (step.prepare) step.prepare();
+
+            document.getElementById('tourTitle').textContent = step.title;
+            document.getElementById('tourText').textContent = step.text;
+            document.getElementById('tourStepLabel').textContent = `Passo ${index + 1} de ${tourSteps.length}`;
+            document.getElementById('tourPrevBtn').style.visibility = index === 0 ? 'hidden' : 'visible';
+            document.getElementById('tourNextBtn').innerHTML = index === tourSteps.length - 1
+                ? 'Concluir <i class="fa-solid fa-circle-check"></i>'
+                : 'Próximo <i class="fa-solid fa-arrow-right"></i>';
+
+            setTimeout(() => {
+                const target = pickVisibleTarget(step.targets);
+                if (target) {
+                    positionTourStep(target);
+                } else {
+                    endAppTour();
+                }
+            }, 250); // dá tempo pro prepare() (troca de view / abrir sheet) renderizar antes de medir a posição
+        }
+
+        function positionTourStep(el) {
+            el.scrollIntoView({ block: 'center', inline: 'center' });
+            setTimeout(() => {
+                const r = el.getBoundingClientRect();
+                const pad = 6;
+                const spotlight = document.getElementById('tourSpotlight');
+                spotlight.style.top = (r.top - pad) + 'px';
+                spotlight.style.left = (r.left - pad) + 'px';
+                spotlight.style.width = (r.width + pad * 2) + 'px';
+                spotlight.style.height = (r.height + pad * 2) + 'px';
+                spotlight.classList.remove('hidden');
+
+                const tooltip = document.getElementById('tourTooltip');
+                tooltip.classList.remove('hidden');
+                const tw = tooltip.offsetWidth, th = tooltip.offsetHeight;
+                const spaceBelow = window.innerHeight - r.bottom;
+                const top = spaceBelow > th + 24 ? r.bottom + 16 : Math.max(16, r.top - th - 16);
+                const left = Math.min(Math.max(16, r.left + r.width / 2 - tw / 2), window.innerWidth - tw - 16);
+                tooltip.style.top = top + 'px';
+                tooltip.style.left = left + 'px';
+            }, 150);
+        }
+
+        function nextTourStep() {
+            if (currentTourStep < tourSteps.length - 1) {
+                currentTourStep++;
+                showTourStep(currentTourStep);
             } else {
-                nextBtn.innerHTML = 'Avançar <i class="fa-solid fa-arrow-right"></i>';
+                endAppTour();
+                showToast("Dicas absorvidas! Aproveite o FinançasPro.", "fa-wand-magic-sparkles", "text-blue-500");
             }
         }
 
-        function nextTutorialSlide() {
-            if (currentTutorialSlide < 4) {
-                switchTutorialSlide(currentTutorialSlide + 1);
-            } else {
-                closeTutorialModal();
-                showToast("Dicas absorvidas! Aproveite o FinançasPro.", "fa-wand-magic-sparkles", "text-blue-500");
+        function prevTourStep() {
+            if (currentTourStep > 0) {
+                currentTourStep--;
+                showTourStep(currentTourStep);
             }
+        }
+
+        function endAppTour() {
+            document.getElementById('tourSpotlight').classList.add('hidden');
+            document.getElementById('tourTooltip').classList.add('hidden');
+            document.getElementById('tourBackdrop').classList.add('hidden');
+            closeMoreSheet();
         }
 
         // Invoice AI Import (Google Gemini) Controllers
