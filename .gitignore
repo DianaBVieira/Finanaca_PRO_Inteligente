@@ -2,3 +2,14 @@
 index - Copia.html
 .DS_Store
 Thumbs.db
+
+# Android/Bubblewrap (TWA) build output — NUNCA versionar a chave de assinatura
+*.keystore
+*.jks
+android.keystore
+app-release-signed.apk
+build/
+.gradle/
+gradlew
+gradlew.bat
+gradle/
