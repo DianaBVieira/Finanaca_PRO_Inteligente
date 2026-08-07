@@ -24,6 +24,7 @@
     <script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-functions-compat.js"></script>
 
     <style>
         body {
@@ -141,6 +142,38 @@
         </div>
     </div>
 
+    <!-- SUBSCRIPTION / TRIAL GATE -->
+    <div id="subscriptionScreen" class="hidden fixed inset-0 z-[55] bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-950 p-4 overflow-y-auto">
+        <div class="min-h-full flex items-center justify-center">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 sm:p-8 text-center">
+                <img src="assets/financaPro_logo.png" alt="FinançasPro" class="w-44 mx-auto mb-4">
+                <div class="w-14 h-14 mx-auto rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-crown text-2xl"></i>
+                </div>
+                <h2 class="text-2xl font-extrabold text-slate-900">Continue com o FinançasPro</h2>
+                <p id="subscriptionMessage" class="text-sm text-slate-500 mt-2">Seu período gratuito terminou. Assine para continuar usando todos os recursos.</p>
+                <div class="my-6 rounded-2xl border border-blue-100 bg-blue-50/70 p-5">
+                    <div class="flex items-end justify-center gap-1">
+                        <span class="text-4xl font-black text-blue-700">R$ 19,99</span>
+                        <span class="text-sm font-semibold text-slate-500 mb-1">/mês</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-2">Cobrança mensal segura pelo Asaas. Cancele quando quiser.</p>
+                </div>
+                <button id="subscribeButton" onclick="startSubscription()" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-lg shadow-blue-500/25 hover:from-blue-700 hover:to-indigo-700 transition-all">
+                    <i class="fa-solid fa-lock mr-2"></i> Assinar com Asaas
+                </button>
+                <button id="refreshSubscriptionButton" onclick="refreshSubscriptionStatus()" class="w-full mt-3 py-2.5 text-sm font-bold text-blue-700 hover:bg-blue-50 rounded-xl transition-colors">
+                    Já paguei — verificar acesso
+                </button>
+                <button id="backToAppButton" onclick="closeSubscriptionDetails()" class="hidden w-full mt-1 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors">
+                    Voltar ao painel
+                </button>
+                <button onclick="handleLogout()" class="mt-3 text-xs font-semibold text-slate-400 hover:text-slate-600">Sair desta conta</button>
+                <p id="subscriptionError" class="hidden mt-4 text-xs font-semibold text-rose-600"></p>
+            </div>
+        </div>
+    </div>
+
     <!-- MAIN SITE VIEW -->
     <div id="mainApp" class="hidden flex-grow flex flex-col">
         <!-- Top Navigation / Header -->
@@ -156,7 +189,7 @@
                     </button>
                 </div>
                 
-                <!-- Controls: Year Selector, Tutorial, Backup, Logout (desktop only — mobile uses bottom nav + "Mais") -->
+                <!-- Controls: Year Selector, Tutorial, Backup and Profile (desktop only — mobile uses bottom nav + "Mais") -->
                 <div class="hidden sm:flex flex-wrap items-center gap-2 sm:gap-3">
                     <!-- Year selector -->
                     <div class="flex items-center bg-white/10 rounded-xl px-3 py-1.5 border border-white/25" data-tour-target="year-desktop">
@@ -185,12 +218,15 @@
                         <input type="file" id="importFile" class="hidden" accept=".json" onchange="importData(event)">
                     </label>
 
-                    <!-- Logged-in user -->
-                    <span class="loggedInUserLabel text-xs text-blue-200 font-medium max-w-[140px] truncate" title=""></span>
-
-                    <!-- Logout Button -->
-                    <button onclick="handleLogout()" class="bg-red-500/20 hover:bg-red-500/35 text-red-200 p-2 rounded-xl text-xs font-semibold transition-all border border-red-500/30">
-                        <i class="fa-solid fa-right-from-bracket"></i>
+                    <!-- Logged-in user profile -->
+                    <button onclick="openUserProfile()" class="flex items-center gap-2 text-blue-200 hover:text-white transition-colors" title="Abrir meu perfil" aria-label="Abrir meu perfil">
+                        <span class="w-8 h-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-sm" aria-hidden="true">
+                            <i class="fa-solid fa-user"></i>
+                        </span>
+                        <span class="loggedInUserLabel text-xs font-medium max-w-[140px] truncate"></span>
+                    </button>
+                    <button onclick="openSubscriptionDetails()" id="accessStatusBadge" class="bg-emerald-500/20 text-emerald-100 px-3 py-1.5 rounded-xl text-xs font-semibold border border-emerald-400/30">
+                        <i class="fa-solid fa-gift mr-1"></i> 14 dias grátis
                     </button>
                 </div>
             </div>
@@ -645,6 +681,64 @@
         </nav>
     </div>
 
+    <!-- Perfil do usuário -->
+    <div id="userProfileModal" class="hidden fixed inset-0 z-[90] bg-slate-950/60 backdrop-blur-sm p-4 items-center justify-center" onclick="if(event.target === this) closeUserProfile()">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div class="bg-gradient-to-r from-blue-700 to-indigo-700 px-6 py-5 text-white flex items-center justify-between">
+                <div>
+                    <p class="text-xs uppercase tracking-widest text-blue-200 font-bold">Minha conta</p>
+                    <h3 class="text-xl font-extrabold mt-1">Perfil do usuário</h3>
+                </div>
+                <button onclick="closeUserProfile()" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20" aria-label="Fechar perfil"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl"><i class="fa-solid fa-user"></i></div>
+                    <div class="min-w-0">
+                        <p id="profileName" class="font-bold text-slate-800 truncate">—</p>
+                        <p id="profileEmail" class="text-sm text-slate-500 truncate">—</p>
+                    </div>
+                </div>
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Plano atual</p>
+                    <div class="flex items-center justify-between gap-3 mt-2">
+                        <div>
+                            <p id="profilePlan" class="font-extrabold text-slate-800">—</p>
+                            <p id="profilePlanDetails" class="text-xs text-slate-500 mt-1">—</p>
+                        </div>
+                        <span id="profilePlanBadge" class="px-3 py-1.5 rounded-full text-xs font-bold bg-slate-200 text-slate-600">—</span>
+                    </div>
+                </div>
+                <button onclick="closeUserProfile(); openSubscriptionDetails();" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors"><i class="fa-solid fa-crown mr-2"></i>Ver assinatura</button>
+                <button id="profileCancelButton" onclick="openCancellationModal()" class="hidden w-full bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold py-3 rounded-xl border border-amber-200 transition-colors"><i class="fa-solid fa-ban mr-2"></i>Cancelar assinatura</button>
+                <button onclick="closeUserProfile(); handleLogout();" class="w-full bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold py-3 rounded-xl border border-rose-200 transition-colors"><i class="fa-solid fa-right-from-bracket mr-2"></i>Sair da conta</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmação de cancelamento da assinatura -->
+    <div id="cancellationModal" class="hidden fixed inset-0 z-[100] bg-slate-950/70 backdrop-blur-sm p-4 items-center justify-center" onclick="if(event.target === this) closeCancellationModal()">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div class="px-6 pt-6 text-center">
+                <div class="w-14 h-14 mx-auto rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-2xl"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <h3 class="text-xl font-extrabold text-slate-900 mt-4">Tem certeza que deseja cancelar?</h3>
+                <p class="text-sm text-slate-500 mt-2">As próximas cobranças serão interrompidas. Seu acesso continuará disponível até o fim do período já pago.</p>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label for="cancellationReason" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Motivo do cancelamento</label>
+                    <textarea id="cancellationReason" rows="4" maxlength="500" placeholder="Conte brevemente por que deseja cancelar" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none"></textarea>
+                    <p class="text-[11px] text-slate-400 mt-1">O motivo é obrigatório e nos ajuda a melhorar o FinançasPro.</p>
+                </div>
+                <p id="cancelSubscriptionError" class="hidden text-sm font-semibold text-rose-600"></p>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="closeCancellationModal()" class="py-3 rounded-xl border border-slate-300 text-slate-600 font-bold hover:bg-slate-50 transition-colors">Voltar</button>
+                    <button id="confirmCancellationButton" onclick="confirmSubscriptionCancellation()" class="py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold transition-colors">Sim, cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- FOOTER -->
     <footer class="bg-white border-t border-slate-200 mt-auto shadow-inner pt-6 pb-24 sm:pb-6">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
@@ -813,7 +907,10 @@
             <div class="px-5 pt-4 pb-3 flex justify-between items-center border-b border-slate-100">
                 <div>
                     <h3 class="font-bold text-slate-800">Mais Opções</h3>
-                    <span class="loggedInUserLabel text-[11px] text-slate-400"></span>
+                    <button onclick="closeMoreSheet(); openUserProfile();" class="mt-1 flex items-center gap-2 text-blue-600 hover:text-blue-700" title="Abrir meu perfil">
+                        <span class="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center text-xs" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
+                        <span class="loggedInUserLabel text-[11px] font-semibold"></span>
+                    </button>
                 </div>
                 <button onclick="closeMoreSheet()" class="text-slate-400 hover:text-slate-600 p-1"><i class="fa-solid fa-xmark"></i></button>
             </div>
@@ -845,9 +942,6 @@
                     <input type="file" id="importFileMobile" class="hidden" accept=".json" onchange="importData(event)">
                 </label>
 
-                <button onclick="handleLogout()" class="w-full flex items-center gap-3 bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold px-4 py-3 rounded-xl transition-all">
-                    <i class="fa-solid fa-right-from-bracket w-4 text-center"></i> Sair
-                </button>
             </div>
         </div>
     </div>
@@ -884,6 +978,7 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
+        const functions = firebase.functions();
         // Em algumas redes (proxy/firewall corporativo, certos ambientes restritos) a conexão
         // "streaming" padrão do Firestore fica presa em loop de reconexão — isso força o long-polling,
         // que funciona em qualquer rede (recomendação oficial do Firebase para esse sintoma).
@@ -896,6 +991,7 @@
 
         let currentUser = null;
         let pendingAuthToast = null;
+        let currentEntitlement = null;
 
         function getDefaultAppState() {
             return {
@@ -925,28 +1021,176 @@
             const loader = document.getElementById('authLoader');
             if (user) {
                 currentUser = user;
-                loadAppState(user.uid).then(function() {
+                loadEntitlement().then(function() {
                     loader.classList.add('hidden');
+                    document.getElementById('authScreen').classList.add('hidden');
+                    if (!hasActiveAccess(currentEntitlement)) {
+                        showSubscriptionGate();
+                        return;
+                    }
+                    return loadAppState(user.uid);
+                }).then(function() {
+                    if (!hasActiveAccess(currentEntitlement)) return;
                     buildMonthTabs();
                     syncYearInput();
                     initDataStructure(appState.currentYear);
-                    document.getElementById('authScreen').classList.add('hidden');
                     document.getElementById('mainApp').classList.remove('hidden');
+                    document.getElementById('subscriptionScreen').classList.add('hidden');
                     renderAll();
                     syncLoggedInUserDisplay();
+                    updateAccessBadge();
                     if (pendingAuthToast) {
                         showToast(pendingAuthToast.message, pendingAuthToast.icon, pendingAuthToast.color);
                         pendingAuthToast = null;
                         setTimeout(startAppTour, 400);
                     }
+                }).catch(function(err) {
+                    console.error('Erro ao validar acesso:', err);
+                    loader.classList.add('hidden');
+                    document.getElementById('authScreen').classList.add('hidden');
+                    showSubscriptionGate('Não foi possível validar seu acesso agora. Verifique sua conexão e tente novamente.');
+                    const errorBox = document.getElementById('subscriptionError');
+                    errorBox.textContent = 'Falha ao consultar o servidor.';
+                    errorBox.classList.remove('hidden');
                 });
             } else {
                 currentUser = null;
+                currentEntitlement = null;
                 loader.classList.add('hidden');
                 document.getElementById('mainApp').classList.add('hidden');
+                document.getElementById('subscriptionScreen').classList.add('hidden');
                 document.getElementById('authScreen').classList.remove('hidden');
             }
         });
+
+        function entitlementDate(value) {
+            if (!value) return null;
+            if (typeof value.toDate === 'function') return value.toDate();
+            return new Date(value);
+        }
+
+        function formatEntitlementDate(value) {
+            const date = entitlementDate(value);
+            return date && !Number.isNaN(date.getTime())
+                ? date.toLocaleDateString('pt-BR')
+                : '';
+        }
+
+        function hasCanceledAccess(entitlement) {
+            if (!entitlement || entitlement.status !== 'canceled') return false;
+            const accessEnd = entitlementDate(entitlement.accessEndsAt);
+            return accessEnd && accessEnd.getTime() > Date.now();
+        }
+
+        function hasActiveAccess(entitlement) {
+            if (!entitlement) return false;
+            if (entitlement.status === 'authorized' || entitlement.status === 'active') return true;
+            const trialEnd = entitlementDate(entitlement.trialEndsAt);
+            return (entitlement.status === 'trialing' && trialEnd && trialEnd.getTime() > Date.now())
+                || hasCanceledAccess(entitlement);
+        }
+
+        async function loadEntitlement(forceServer) {
+            const ref = db.collection('entitlements').doc(currentUser.uid);
+            let snap = await ref.get(forceServer ? { source: 'server' } : undefined);
+            if (!snap.exists) {
+                await functions.httpsCallable('initializeTrial')();
+                snap = await ref.get({ source: 'server' });
+            }
+            currentEntitlement = snap.exists ? snap.data() : null;
+            return currentEntitlement;
+        }
+
+        function remainingTrialDays() {
+            const trialEnd = currentEntitlement && entitlementDate(currentEntitlement.trialEndsAt);
+            return trialEnd ? Math.max(0, Math.ceil((trialEnd.getTime() - Date.now()) / 86400000)) : 0;
+        }
+
+        function updateAccessBadge() {
+            const badge = document.getElementById('accessStatusBadge');
+            if (!badge || !currentEntitlement) return;
+            if (currentEntitlement.status === 'authorized' || currentEntitlement.status === 'active') {
+                badge.innerHTML = '<i class="fa-solid fa-crown mr-1"></i> Assinatura ativa';
+                badge.className = 'bg-emerald-500/20 text-emerald-100 px-3 py-1.5 rounded-xl text-xs font-semibold border border-emerald-400/30';
+            } else if (hasCanceledAccess(currentEntitlement)) {
+                badge.innerHTML = `<i class="fa-solid fa-calendar-check mr-1"></i> Acesso até ${formatEntitlementDate(currentEntitlement.accessEndsAt)}`;
+                badge.className = 'bg-amber-500/20 text-amber-100 px-3 py-1.5 rounded-xl text-xs font-semibold border border-amber-400/30';
+            } else {
+                const days = remainingTrialDays();
+                badge.innerHTML = `<i class="fa-solid fa-gift mr-1"></i> ${days} ${days === 1 ? 'dia grátis' : 'dias grátis'}`;
+            }
+        }
+
+        function showSubscriptionGate(customMessage) {
+            document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('subscriptionScreen').classList.remove('hidden');
+            document.getElementById('subscriptionMessage').textContent = customMessage || 'Seu período gratuito terminou. Assine para continuar usando todos os recursos.';
+            document.getElementById('backToAppButton').classList.toggle('hidden', !hasActiveAccess(currentEntitlement));
+        }
+
+        function openSubscriptionDetails() {
+            const days = remainingTrialDays();
+            const active = currentEntitlement && (currentEntitlement.status === 'authorized' || currentEntitlement.status === 'active');
+            const canceled = hasCanceledAccess(currentEntitlement);
+            const message = active
+                ? 'Sua assinatura está ativa. Você tem acesso completo ao FinançasPro.'
+                : (canceled
+                    ? `Sua assinatura foi cancelada e não haverá novas cobranças. Seu acesso continua até ${formatEntitlementDate(currentEntitlement.accessEndsAt)}.`
+                    : `Seu teste gratuito está ativo por mais ${days} ${days === 1 ? 'dia' : 'dias'}. Você pode assinar agora e garantir seu acesso.`);
+            document.getElementById('subscribeButton').classList.toggle('hidden', active || canceled);
+            document.getElementById('refreshSubscriptionButton').classList.toggle('hidden', active || canceled);
+            showSubscriptionGate(message);
+        }
+
+        function closeSubscriptionDetails() {
+            if (!hasActiveAccess(currentEntitlement)) return;
+            document.getElementById('subscriptionScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+        }
+
+        async function startSubscription() {
+            const button = document.getElementById('subscribeButton');
+            const errorBox = document.getElementById('subscriptionError');
+            button.disabled = true;
+            button.classList.add('opacity-60');
+            errorBox.classList.add('hidden');
+            try {
+                const result = await functions.httpsCallable('createSubscription')();
+                if (!result.data || !result.data.checkoutUrl) throw new Error('Link de pagamento não recebido.');
+                window.location.href = result.data.checkoutUrl;
+            } catch (err) {
+                console.error(err);
+                errorBox.textContent = err.message || 'Não foi possível abrir o Asaas. Tente novamente.';
+                errorBox.classList.remove('hidden');
+                button.disabled = false;
+                button.classList.remove('opacity-60');
+            }
+        }
+
+        async function refreshSubscriptionStatus() {
+            try {
+                await functions.httpsCallable('refreshSubscriptionStatus')();
+                await loadEntitlement(true);
+                const paymentConfirmed = currentEntitlement && (currentEntitlement.status === 'authorized' || currentEntitlement.status === 'active');
+                if (paymentConfirmed) {
+                    await loadAppState(currentUser.uid);
+                    document.getElementById('subscriptionScreen').classList.add('hidden');
+                    document.getElementById('mainApp').classList.remove('hidden');
+                    buildMonthTabs();
+                    syncYearInput();
+                    initDataStructure(appState.currentYear);
+                    renderAll();
+                    syncLoggedInUserDisplay();
+                    updateAccessBadge();
+                    showToast('Acesso liberado!', 'fa-circle-check', 'text-emerald-500');
+                } else {
+                    document.getElementById('subscriptionMessage').textContent = 'O pagamento ainda não foi confirmado. Aguarde alguns instantes e tente novamente.';
+                }
+            } catch (err) {
+                document.getElementById('subscriptionError').textContent = 'Não foi possível verificar agora. Tente novamente.';
+                document.getElementById('subscriptionError').classList.remove('hidden');
+            }
+        }
 
         // Firestore persistence — um único documento por cliente em users/{uid}
         function loadAppState(uid) {
@@ -976,7 +1220,92 @@
             const label = currentUser ? (currentUser.displayName || currentUser.email) : "";
             document.querySelectorAll('.loggedInUserLabel').forEach(function(el) {
                 el.textContent = label;
+                el.title = currentUser ? `Perfil de ${label}` : '';
             });
+        }
+
+        function openUserProfile() {
+            if (!currentUser) return;
+            const active = currentEntitlement && (currentEntitlement.status === 'authorized' || currentEntitlement.status === 'active');
+            const canceled = hasCanceledAccess(currentEntitlement);
+            const trialing = currentEntitlement && currentEntitlement.status === 'trialing';
+            document.getElementById('profileName').textContent = currentUser.displayName || 'Usuário FinançasPro';
+            document.getElementById('profileEmail').textContent = currentUser.email || 'E-mail não informado';
+            document.getElementById('profilePlan').textContent = (active || canceled) ? 'FinançasPro Mensal' : (trialing ? 'Teste gratuito' : 'Acesso inativo');
+            document.getElementById('profilePlanDetails').textContent = active
+                ? 'R$ 19,99 por mês • acesso completo'
+                : (canceled
+                    ? `Sem novas cobranças • acesso até ${formatEntitlementDate(currentEntitlement.accessEndsAt)}`
+                    : (trialing ? `${remainingTrialDays()} dias restantes no período gratuito` : 'Escolha um plano para continuar'));
+            const badge = document.getElementById('profilePlanBadge');
+            badge.textContent = active ? 'Ativo' : (canceled ? 'Cancelado' : (trialing ? 'Em teste' : 'Inativo'));
+            badge.className = active
+                ? 'px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700'
+                : (canceled
+                    ? 'px-3 py-1.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700'
+                    : (trialing
+                        ? 'px-3 py-1.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700'
+                        : 'px-3 py-1.5 rounded-full text-xs font-bold bg-rose-100 text-rose-700'));
+            document.getElementById('profileCancelButton').classList.toggle('hidden', !active);
+            const modal = document.getElementById('userProfileModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeUserProfile() {
+            const modal = document.getElementById('userProfileModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function openCancellationModal() {
+            if (!currentEntitlement || !(currentEntitlement.status === 'authorized' || currentEntitlement.status === 'active')) return;
+            closeUserProfile();
+            const modal = document.getElementById('cancellationModal');
+            const reason = document.getElementById('cancellationReason');
+            document.getElementById('cancelSubscriptionError').classList.add('hidden');
+            reason.value = '';
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(function() { reason.focus(); }, 100);
+        }
+
+        function closeCancellationModal() {
+            const modal = document.getElementById('cancellationModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        async function confirmSubscriptionCancellation() {
+            const reason = document.getElementById('cancellationReason').value.trim();
+            const errorBox = document.getElementById('cancelSubscriptionError');
+            const button = document.getElementById('confirmCancellationButton');
+            errorBox.classList.add('hidden');
+            if (reason.length < 3) {
+                errorBox.textContent = 'Informe o motivo do cancelamento.';
+                errorBox.classList.remove('hidden');
+                return;
+            }
+
+            button.disabled = true;
+            button.classList.add('opacity-60');
+            button.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Cancelando...';
+            try {
+                await functions.httpsCallable('cancelSubscription')({ reason: reason });
+                await loadEntitlement(true);
+                updateAccessBadge();
+                closeCancellationModal();
+                openUserProfile();
+                showToast('Assinatura cancelada. Não haverá novas cobranças.', 'fa-circle-check', 'text-emerald-500');
+            } catch (err) {
+                console.error('Erro ao cancelar assinatura:', err);
+                errorBox.textContent = err.message || 'Não foi possível cancelar agora. Tente novamente.';
+                errorBox.classList.remove('hidden');
+            } finally {
+                button.disabled = false;
+                button.classList.remove('opacity-60');
+                button.textContent = 'Sim, cancelar';
+            }
         }
 
         // Authentication Screen Tabs Switching

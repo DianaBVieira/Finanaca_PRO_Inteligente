@@ -13,3 +13,13 @@ build/
 gradlew
 gradlew.bat
 gradle/
+
+# Firebase local/deploy artifacts
+.firebase/
+firebase-debug.log
+deploy_log.txt
+
+# Cloud Functions dependencies and local environment
+functions/node_modules/
+functions/.env
+functions/.env.*

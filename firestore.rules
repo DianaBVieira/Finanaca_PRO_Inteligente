@@ -1,0 +1,27 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function hasActiveAccess(userId) {
+      let entitlement = get(/databases/$(database)/documents/entitlements/$(userId)).data;
+      return entitlement.status in ['authorized', 'active']
+        || (entitlement.status == 'trialing' && entitlement.trialEndsAt > request.time)
+        || (entitlement.status == 'canceled' && entitlement.accessEndsAt > request.time);
+    }
+
+    match /users/{userId} {
+      allow read, write: if request.auth != null
+        && request.auth.uid == userId
+        && hasActiveAccess(userId);
+    }
+
+    match /entitlements/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
