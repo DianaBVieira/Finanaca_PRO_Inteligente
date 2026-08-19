@@ -11,6 +11,26 @@ const appUrl = process.env.APP_URL || "https://financas-pro-3c21e.web.app/";
 const asaasApiUrl = (process.env.ASAAS_API_URL || "https://api-sandbox.asaas.com/v3").replace(/\/$/, "");
 const subscriptionAmount = 19.99;
 
+// Painel central de clientes (projeto Supabase separado) — ver Painel_Central_Clientes/.
+const ingestSharedSecret = defineSecret("INGEST_SHARED_SECRET");
+const centralIngestUrl = process.env.CENTRAL_INGEST_URL ||
+  "https://cgmaikugpjlpuwbubrcw.supabase.co/functions/v1/ingest-event";
+
+// Best-effort: nunca deixa o webhook do Asaas falhar por causa do painel central.
+async function notifyCentralPanel(payload) {
+  const secret = ingestSharedSecret.value();
+  if (!secret) return;
+  try {
+    await fetch(centralIngestUrl, {
+      method: "POST",
+      headers: {"Content-Type": "application/json", "x-ingest-token": secret},
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    console.error("Falha ao notificar painel central", error);
+  }
+}
+
 function requireUser(request) {
   if (!request.auth) throw new HttpsError("unauthenticated", "Entre na sua conta para continuar.");
   return request.auth;
@@ -161,28 +181,46 @@ function cancellationAccessEnd(subscription, payments) {
   return new Date(Math.max(...candidates.map((date) => date.getTime())));
 }
 
-exports.initializeTrial = onCall(async (request) => {
-  const auth = requireUser(request);
-  const ref = db.collection("entitlements").doc(auth.uid);
-  await db.runTransaction(async (transaction) => {
-    const snap = await transaction.get(ref);
-    if (snap.exists) return;
-    const now = admin.firestore.Timestamp.now();
-    const trialEndsAt = admin.firestore.Timestamp.fromMillis(now.toMillis() + 14 * 24 * 60 * 60 * 1000);
-    transaction.create(ref, {
-      uid: auth.uid,
-      email: auth.token.email || null,
-      status: "trialing",
-      trialStartedAt: now,
-      trialEndsAt,
-      planAmount: subscriptionAmount,
-      currency: "BRL",
-      createdAt: now,
-      updatedAt: now,
+exports.initializeTrial = onCall(
+  {secrets: [ingestSharedSecret]},
+  async (request) => {
+    const auth = requireUser(request);
+    const ref = db.collection("entitlements").doc(auth.uid);
+    let created = false;
+    let trialEndsAtIso = null;
+    await db.runTransaction(async (transaction) => {
+      const snap = await transaction.get(ref);
+      if (snap.exists) return;
+      const now = admin.firestore.Timestamp.now();
+      const trialEndsAt = admin.firestore.Timestamp.fromMillis(now.toMillis() + 14 * 24 * 60 * 60 * 1000);
+      transaction.create(ref, {
+        uid: auth.uid,
+        email: auth.token.email || null,
+        status: "trialing",
+        trialStartedAt: now,
+        trialEndsAt,
+        planAmount: subscriptionAmount,
+        currency: "BRL",
+        createdAt: now,
+        updatedAt: now,
+      });
+      created = true;
+      trialEndsAtIso = trialEndsAt.toDate().toISOString();
     });
-  });
-  return {ok: true};
-});
+    if (created) {
+      // Só notifica o painel central na primeira vez (novo cliente de verdade).
+      await notifyCentralPanel({
+        app_slug: "financaspro",
+        external_customer_id: auth.uid,
+        email: auth.token.email || null,
+        event_type: "trial_started",
+        trial_ends_at: trialEndsAtIso,
+        occurred_at: new Date().toISOString(),
+      });
+    }
+    return {ok: true};
+  },
+);
 
 exports.createSubscription = onCall(
   {secrets: [asaasApiKey]},
@@ -387,7 +425,7 @@ exports.cancelSubscription = onCall(
 );
 
 exports.asaasWebhook = onRequest(
-  {secrets: [asaasWebhookToken]},
+  {secrets: [asaasWebhookToken, ingestSharedSecret]},
   async (req, res) => {
     if (req.method !== "POST") {
       res.status(405).send("Method not allowed");
@@ -455,6 +493,28 @@ exports.asaasWebhook = onRequest(
         lastWebhookAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       }, {merge: true});
+
+      const centralEventType = paid ?
+        "payment_paid" :
+        event === "CHECKOUT_CANCELED" ?
+        "subscription_canceled" :
+        event === "CHECKOUT_EXPIRED" ?
+        "subscription_expired" :
+        null;
+      if (centralEventType) {
+        await notifyCentralPanel({
+          app_slug: "financaspro",
+          external_customer_id: uid,
+          email: entitlement.email || null,
+          event_type: centralEventType,
+          gateway: "asaas",
+          amount_cents: paid ? Math.round(subscriptionAmount * 100) : undefined,
+          currency: "BRL",
+          occurred_at: new Date().toISOString(),
+          external_payment_id: eventId,
+        });
+      }
+
       res.status(200).send("OK");
     } catch (error) {
       console.error("Erro ao processar webhook Asaas", error);
@@ -462,3 +522,4 @@ exports.asaasWebhook = onRequest(
     }
   }
 );
+

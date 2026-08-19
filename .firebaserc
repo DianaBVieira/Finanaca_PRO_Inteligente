@@ -1,5 +1,18 @@
 {
   "projects": {
     "default": "financas-pro-3c21e"
-  }
+  },
+  "targets": {
+    "financas-pro-3c21e": {
+      "hosting": {
+        "default": [
+          "financas-pro-3c21e"
+        ],
+        "financaspro": [
+          "financaspro"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

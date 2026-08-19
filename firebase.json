@@ -6,15 +6,30 @@
   "firestore": {
     "rules": "firestore.rules"
   },
-  "hosting": {
-    "public": ".",
-    "ignore": [
-      "firebase.json",
-      "firestore.rules",
-      "functions/**",
-      "**/.*",
-      "**/node_modules/**",
-      "index - Copia.html"
-    ]
-  }
+  "hosting": [
+    {
+      "target": "default",
+      "public": ".",
+      "ignore": [
+        "firebase.json",
+        "firestore.rules",
+        "functions/**",
+        "**/.*",
+        "**/node_modules/**",
+        "index - Copia.html"
+      ]
+    },
+    {
+      "target": "financaspro",
+      "public": ".",
+      "ignore": [
+        "firebase.json",
+        "firestore.rules",
+        "functions/**",
+        "**/.*",
+        "**/node_modules/**",
+        "index - Copia.html"
+      ]
+    }
+  ]
 }
