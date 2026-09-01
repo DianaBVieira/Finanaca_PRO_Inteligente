@@ -1580,6 +1580,10 @@
                     appState.currentMonthIndex = Number.isInteger(savedMonth) && savedMonth >= 0 && savedMonth <= 11
                         ? savedMonth
                         : new Date().getMonth();
+                    // A preferência local deste aparelho tem prioridade: é a última
+                    // ação do usuário aqui e não depende de sincronização com a nuvem
+                    // (essencial em conexão ruim ou app aberto por outro domínio).
+                    applyLocalViewPosition();
                 } else {
                     appState = getDefaultAppState();
                     return saveAppState();
@@ -2303,6 +2307,7 @@
                 closeInvoiceImportModal();
                 diagCardSelection = cardName;
                 appState.currentMonthIndex = monthIndex;
+                persistViewPosition();
                 switchView('dash');
                 showToast(`${cleanItems.length} lançamentos importados da fatura!`, "fa-circle-check", "text-violet-500");
             } catch (err) {
@@ -2889,21 +2894,49 @@
         }
 
         // NAVIGATION CONTROLS
+
+        // Guarda mês/ano abertos no próprio aparelho (localStorage). É instantâneo
+        // e offline; a nuvem (saveAppState) cuida da sincronização entre aparelhos.
+        function persistViewPosition() {
+            try {
+                localStorage.setItem('financaspro:lastMonth', String(appState.currentMonthIndex));
+                localStorage.setItem('financaspro:lastYear', String(appState.currentYear));
+            } catch (e) {}
+        }
+
+        function applyLocalViewPosition() {
+            try {
+                const rawM = localStorage.getItem('financaspro:lastMonth');
+                if (rawM !== null && rawM !== '') {
+                    const lm = Number(rawM);
+                    if (Number.isInteger(lm) && lm >= 0 && lm <= 11) appState.currentMonthIndex = lm;
+                }
+                const rawY = localStorage.getItem('financaspro:lastYear');
+                if (rawY !== null && rawY !== '') {
+                    const ly = Number(rawY);
+                    if (Number.isInteger(ly) && ly >= 2000 && ly <= 2100) appState.currentYear = ly;
+                }
+            } catch (e) {}
+        }
+
         function changeYear(delta) {
             appState.currentYear = Number(appState.currentYear) + delta;
             syncYearInput();
+            persistViewPosition();
             saveAppState();
             renderAll();
         }
 
         function handleYearChange(val) {
             appState.currentYear = Number(val) || 2026;
+            persistViewPosition();
             saveAppState();
             renderAll();
         }
 
         function selectMonth(idx) {
             appState.currentMonthIndex = idx;
+            persistViewPosition();
             saveAppState();
             renderAll();
         }
