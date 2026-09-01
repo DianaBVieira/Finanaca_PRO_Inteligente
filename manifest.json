@@ -1,16 +1,21 @@
 {
+  "id": "/",
   "name": "FinançasPro",
   "short_name": "FinançasPro",
   "description": "Gestão financeira inteligente e planejamento anual, por Utopia Desenvolvimentos.",
-  "start_url": "./index.html",
-  "scope": "./",
+  "start_url": "/index.html?app=1",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "prefer_related_applications": false,
   "background_color": "#0f172a",
   "theme_color": "#1e3a8a",
   "orientation": "portrait",
   "lang": "pt-BR",
   "icons": [
     { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }

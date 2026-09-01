@@ -3,11 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FinançasPro & Dashboard | Utopia Desenvolvimentos</title>
+    <title>FinançasPro — Planejamento financeiro anual, mês a mês</title>
+    <meta name="description" content="FinançasPro é o app para planejar o ano inteiro mês a mês: receitas, despesas, cartões de crédito consolidados, importação de fatura com IA, metas e diagnóstico automático. 14 dias grátis. Instale no celular ou no computador.">
+    <meta name="keywords" content="planejamento financeiro, controle financeiro pessoal, orçamento mensal, gestão de cartão de crédito, planilha financeira anual, app de finanças, FinançasPro">
+    <meta name="author" content="Utopia Desenvolvimentos">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://financaspro.web.app/">
     <link rel="icon" type="image/png" href="assets/financaPro_icone.png">
     <!-- PWA manifest (necessário para instalar como app / empacotar como TWA) -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e3a8a">
+
+    <!-- Open Graph / redes sociais -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FinançasPro">
+    <meta property="og:locale" content="pt_BR">
+    <meta property="og:title" content="FinançasPro — Planejamento financeiro anual, mês a mês">
+    <meta property="og:description" content="Planeje o ano inteiro: receitas, despesas, cartões consolidados, importação de fatura com IA, metas e diagnóstico automático. 14 dias grátis.">
+    <meta property="og:url" content="https://financaspro.web.app/">
+    <meta property="og:image" content="https://financaspro.web.app/assets/financaPro_logo_horizontal.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="FinançasPro — Planejamento financeiro anual, mês a mês">
+    <meta name="twitter:description" content="Planeje o ano inteiro: receitas, despesas, cartões consolidados, importação de fatura com IA, metas e diagnóstico automático. 14 dias grátis.">
+    <meta name="twitter:image" content="https://financaspro.web.app/assets/financaPro_logo_horizontal.png">
+
+    <!-- Dados estruturados para busca (Google) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "FinançasPro",
+      "applicationCategory": "FinanceApplication",
+      "operatingSystem": "Web, Android, iOS, Windows",
+      "description": "App de planejamento financeiro pessoal e anual: receitas, despesas, cartões de crédito consolidados, importação de fatura com IA, metas e diagnóstico automático.",
+      "url": "https://financaspro.web.app/",
+      "image": "https://financaspro.web.app/assets/financaPro_logo_horizontal.png",
+      "inLanguage": "pt-BR",
+      "author": { "@type": "Organization", "name": "Utopia Desenvolvimentos" },
+      "offers": {
+        "@type": "Offer",
+        "price": "19.99",
+        "priceCurrency": "BRL",
+        "description": "Assinatura mensal com 14 dias de teste gratuito.",
+        "availability": "https://schema.org/InStock"
+      }
+    }
+    </script>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="FinançasPro">
@@ -18,8 +59,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js (só usado dentro do app, depois do login) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <!-- Firebase (compat SDK — API clássica firebase.auth()/firebase.firestore(), compatível com scripts sem bundler) -->
     <script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-auth-compat.js"></script>
@@ -27,8 +68,22 @@
     <script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-functions-compat.js"></script>
 
     <style>
+        html {
+            scroll-behavior: smooth;
+        }
         body {
             font-family: 'Inter', sans-serif;
+        }
+        /* compensa a barra de navegação fixa da landing ao rolar por âncoras */
+        [id^="lp-"] {
+            scroll-margin-top: 76px;
+        }
+        .lp-fade-in {
+            animation: lpFadeIn .6s ease both;
+        }
+        @keyframes lpFadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         ::-webkit-scrollbar {
             width: 6px;
@@ -48,8 +103,276 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
 
+    <!-- ================= LANDING / PÁGINA DE VENDAS ================= -->
+    <div id="landingScreen" class="bg-white text-slate-800 w-full">
+
+        <!-- Barra de navegação -->
+        <header class="fixed top-0 inset-x-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 h-[68px] flex items-center justify-between gap-4">
+                <a href="#lp-top" class="flex items-center gap-2 shrink-0">
+                    <img src="assets/financaPro_logo_horizontal.png" alt="FinançasPro" class="h-7 sm:h-8 w-auto">
+                </a>
+                <nav class="hidden md:flex items-center gap-7 text-sm font-semibold text-slate-600">
+                    <a href="#lp-features" class="hover:text-blue-700 transition-colors">Funcionalidades</a>
+                    <a href="#lp-how" class="hover:text-blue-700 transition-colors">Como funciona</a>
+                    <a href="#lp-pricing" class="hover:text-blue-700 transition-colors">Preço</a>
+                    <a href="#lp-faq" class="hover:text-blue-700 transition-colors">Dúvidas</a>
+                </nav>
+                <div class="hidden md:flex items-center gap-3">
+                    <button onclick="openAuth('login')" class="text-sm font-bold text-slate-700 hover:text-blue-700 px-3 py-2 transition-colors">Entrar</button>
+                    <button onclick="openAuth('register')" class="text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 px-4 py-2.5 rounded-xl shadow-lg shadow-blue-500/25 transition-all">Criar conta grátis</button>
+                </div>
+                <button onclick="toggleLandingMenu()" aria-label="Abrir menu" class="md:hidden w-10 h-10 flex items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100">
+                    <i id="lpMenuIcon" class="fa-solid fa-bars text-lg"></i>
+                </button>
+            </div>
+            <!-- Menu mobile -->
+            <div id="lpMobileMenu" class="hidden md:hidden border-t border-slate-200 bg-white px-4 py-3 space-y-1">
+                <a href="#lp-features" onclick="toggleLandingMenu()" class="block px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-100">Funcionalidades</a>
+                <a href="#lp-how" onclick="toggleLandingMenu()" class="block px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-100">Como funciona</a>
+                <a href="#lp-pricing" onclick="toggleLandingMenu()" class="block px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-100">Preço</a>
+                <a href="#lp-faq" onclick="toggleLandingMenu()" class="block px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-100">Dúvidas</a>
+                <div class="pt-2 mt-1 border-t border-slate-100 flex flex-col gap-2">
+                    <button onclick="openAuth('login')" class="w-full text-sm font-bold text-slate-700 border border-slate-200 px-4 py-2.5 rounded-xl hover:bg-slate-50">Entrar (Login)</button>
+                    <button onclick="openAuth('register')" class="w-full text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2.5 rounded-xl shadow-lg shadow-blue-500/25">Criar conta grátis</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- HERO -->
+        <section id="lp-top" class="relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-950 to-slate-950 text-white pt-[68px]">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24 grid lg:grid-cols-2 gap-12 items-center">
+                <div class="lp-fade-in">
+                    <p class="text-xs sm:text-sm font-bold tracking-widest uppercase text-sky-400 mb-4">Utopia Desenvolvimentos</p>
+                    <h1 class="text-4xl sm:text-5xl lg:text-[3.4rem] font-extrabold leading-[1.1] tracking-tight">
+                        Suas finanças do <span class="text-sky-400">ano inteiro</span>, planejadas mês a mês
+                    </h1>
+                    <p class="mt-5 text-base sm:text-lg text-slate-300 leading-relaxed max-w-xl">
+                        Receitas, despesas e cartões de crédito num só lugar. O FinançasPro projeta o seu ano, consolida a fatura de cada cartão e mostra um diagnóstico automático da sua saúde financeira.
+                    </p>
+                    <div class="mt-8 flex flex-col sm:flex-row gap-3">
+                        <button onclick="openAuth('register')" class="inline-flex items-center justify-center gap-2 bg-white text-slate-900 font-bold text-sm px-6 py-3.5 rounded-xl shadow-xl hover:bg-slate-100 transition-all active:scale-95">
+                            <i class="fa-solid fa-rocket text-blue-600"></i> Criar conta grátis
+                        </button>
+                        <button onclick="promptInstallApp()" class="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/25 text-white font-bold text-sm px-6 py-3.5 rounded-xl transition-all active:scale-95">
+                            <i class="fa-solid fa-circle-down text-sky-300"></i> Instalar o app
+                        </button>
+                    </div>
+                    <p class="mt-4 text-xs text-slate-400">14 dias grátis · Funciona no navegador · Cancele quando quiser</p>
+                </div>
+                <div class="lp-fade-in relative">
+                    <div class="absolute -inset-4 bg-blue-500/20 blur-3xl rounded-full"></div>
+                    <img src="Print_Telas/tela2_financasPro.jpeg" alt="Tela do FinançasPro com receitas e despesas do mês" loading="lazy"
+                        class="relative w-full rounded-2xl border border-white/10 shadow-2xl">
+                </div>
+            </div>
+            <!-- faixa de destaques -->
+            <div class="border-t border-white/10 bg-white/5">
+                <div class="max-w-6xl mx-auto px-4 sm:px-6 py-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center text-xs sm:text-sm font-semibold text-slate-200">
+                    <div><i class="fa-solid fa-calendar-days text-sky-400 mr-1.5"></i> 12 meses planejados</div>
+                    <div><i class="fa-solid fa-credit-card text-sky-400 mr-1.5"></i> Cartões consolidados</div>
+                    <div><i class="fa-solid fa-robot text-sky-400 mr-1.5"></i> Fatura lida por IA</div>
+                    <div><i class="fa-solid fa-mobile-screen text-sky-400 mr-1.5"></i> Instalável no celular</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- COMO FUNCIONA -->
+        <section id="lp-how" class="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+            <div class="text-center max-w-2xl mx-auto">
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">Comece em 3 passos</h2>
+                <p class="mt-3 text-slate-500">Sem planilha, sem fórmula. Você abre e já começa a planejar.</p>
+            </div>
+            <div class="mt-12 grid md:grid-cols-3 gap-6">
+                <div class="rounded-2xl border border-slate-100 bg-slate-50 p-6">
+                    <div class="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center font-extrabold text-lg">1</div>
+                    <h3 class="mt-4 font-bold text-slate-800">Crie sua conta</h3>
+                    <p class="mt-1.5 text-sm text-slate-500 leading-relaxed">Cadastro com e-mail ou Google. Você já entra com 14 dias de teste completo.</p>
+                </div>
+                <div class="rounded-2xl border border-slate-100 bg-slate-50 p-6">
+                    <div class="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center font-extrabold text-lg">2</div>
+                    <h3 class="mt-4 font-bold text-slate-800">Lance receitas, despesas e cartões</h3>
+                    <p class="mt-1.5 text-sm text-slate-500 leading-relaxed">Cadastre suas categorias e valores de cada mês. Dá para replicar um mês inteiro para os seguintes.</p>
+                </div>
+                <div class="rounded-2xl border border-slate-100 bg-slate-50 p-6">
+                    <div class="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center font-extrabold text-lg">3</div>
+                    <h3 class="mt-4 font-bold text-slate-800">Acompanhe e ajuste</h3>
+                    <p class="mt-1.5 text-sm text-slate-500 leading-relaxed">Veja gráficos de evolução, sua meta de poupança e recomendações automáticas de saúde financeira.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- FUNCIONALIDADES -->
+        <section id="lp-features" class="bg-slate-50 border-y border-slate-100">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+                <div class="text-center max-w-2xl mx-auto">
+                    <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">Tudo que você precisa para fechar o mês no azul</h2>
+                    <p class="mt-3 text-slate-500">Um painel único para o planejamento do ano e o controle do dia a dia.</p>
+                </div>
+                <div class="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+                        <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl"><i class="fa-solid fa-calendar-days"></i></div>
+                        <h3 class="mt-4 font-bold text-slate-800">Planejamento anual mês a mês</h3>
+                        <p class="mt-1.5 text-sm text-slate-500 leading-relaxed">Janeiro a dezembro em uma visão só. Projete o ano e replique valores para os meses seguintes com um clique.</p>
+                    </div>
+                    <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+                        <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl"><i class="fa-solid fa-credit-card"></i></div>
+                        <h3 class="mt-4 font-bold text-slate-800">Cartões de crédito consolidados</h3>
+                        <p class="mt-1.5 text-sm text-slate-500 leading-relaxed">Fatura anual por cartão, visão mensal e total geral. A fatura de cada cartão entra automaticamente nas despesas do mês.</p>
+                    </div>
+                    <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+                        <div class="w-12 h-12 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center text-xl"><i class="fa-solid fa-robot"></i></div>
+                        <h3 class="mt-4 font-bold text-slate-800">Importação de fatura com IA</h3>
+                        <p class="mt-1.5 text-sm text-slate-500 leading-relaxed">Envie a fatura e a IA identifica os lançamentos por categoria, já somando no cartão e no mês certo.</p>
+                    </div>
+                    <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl"><i class="fa-solid fa-arrows-rotate"></i></div>
+                        <h3 class="mt-4 font-bold text-slate-800">Sobra do mês anterior automática</h3>
+                        <p class="mt-1.5 text-sm text-slate-500 leading-relaxed">O saldo positivo de um mês vira receita do mês seguinte sozinho, mantendo o acumulado do ano sempre certo.</p>
+                    </div>
+                    <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+                        <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl"><i class="fa-solid fa-chart-line"></i></div>
+                        <h3 class="mt-4 font-bold text-slate-800">Gráficos, metas e diagnóstico</h3>
+                        <p class="mt-1.5 text-sm text-slate-500 leading-relaxed">Evolução anual, distribuição das despesas, meta de poupança, taxa real de poupança e recomendações automáticas.</p>
+                    </div>
+                    <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+                        <div class="w-12 h-12 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center text-xl"><i class="fa-solid fa-mobile-screen"></i></div>
+                        <h3 class="mt-4 font-bold text-slate-800">Multiplataforma e instalável (PWA)</h3>
+                        <p class="mt-1.5 text-sm text-slate-500 leading-relaxed">Use no navegador do computador ou instale como app no Android e no iPhone. Seus dados sincronizam na nuvem.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PRINTS -->
+        <section id="lp-screens" class="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+            <div class="text-center max-w-2xl mx-auto">
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">Por dentro do FinançasPro</h2>
+                <p class="mt-3 text-slate-500">Interface direta, pensada para lançar valores em segundos — no celular ou no computador.</p>
+            </div>
+            <div class="mt-10 flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
+                <img src="Print_Telas/tela2_financasPro.jpeg" alt="Controle de receitas e despesas do mês" loading="lazy" class="snap-center shrink-0 w-[82%] sm:w-[46%] lg:w-[31%] rounded-2xl border border-slate-200 shadow-lg">
+                <img src="Print_Telas/tela3_financasPro.jpeg" alt="Cartões de crédito consolidados" loading="lazy" class="snap-center shrink-0 w-[82%] sm:w-[46%] lg:w-[31%] rounded-2xl border border-slate-200 shadow-lg">
+                <img src="Print_Telas/tela4_financasPro.jpeg" alt="Gráficos e diagnóstico financeiro" loading="lazy" class="snap-center shrink-0 w-[82%] sm:w-[46%] lg:w-[31%] rounded-2xl border border-slate-200 shadow-lg">
+                <img src="Print_Telas/tela5_financasPro.jpeg" alt="Importação de fatura com IA" loading="lazy" class="snap-center shrink-0 w-[82%] sm:w-[46%] lg:w-[31%] rounded-2xl border border-slate-200 shadow-lg">
+            </div>
+        </section>
+
+        <!-- PREÇO -->
+        <section id="lp-pricing" class="bg-slate-50 border-y border-slate-100">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+                <div class="text-center max-w-2xl mx-auto">
+                    <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">Um preço só, tudo incluído</h2>
+                    <p class="mt-3 text-slate-500">Teste 14 dias de graça. Depois, uma assinatura simples — sem plano caro, sem pegadinha.</p>
+                </div>
+                <div class="mt-12 max-w-md mx-auto bg-white rounded-3xl border border-blue-100 shadow-xl overflow-hidden">
+                    <div class="bg-gradient-to-br from-blue-600 to-indigo-600 text-white p-8 text-center">
+                        <p class="text-sm font-bold uppercase tracking-widest text-blue-100">FinançasPro Mensal</p>
+                        <div class="mt-3 flex items-end justify-center gap-1">
+                            <span class="text-5xl font-black">R$ 19,99</span>
+                            <span class="text-sm font-semibold text-blue-100 mb-1.5">/mês</span>
+                        </div>
+                        <p class="mt-2 text-xs text-blue-100">14 dias grátis · cobrança segura pelo Asaas · cancele quando quiser</p>
+                    </div>
+                    <div class="p-8">
+                        <ul class="space-y-3 text-sm text-slate-600">
+                            <li class="flex gap-3"><i class="fa-solid fa-check text-emerald-500 mt-0.5"></i> Planejamento anual completo, mês a mês</li>
+                            <li class="flex gap-3"><i class="fa-solid fa-check text-emerald-500 mt-0.5"></i> Cartões de crédito consolidados no ano</li>
+                            <li class="flex gap-3"><i class="fa-solid fa-check text-emerald-500 mt-0.5"></i> Importação de fatura com IA</li>
+                            <li class="flex gap-3"><i class="fa-solid fa-check text-emerald-500 mt-0.5"></i> Gráficos, metas e diagnóstico automático</li>
+                            <li class="flex gap-3"><i class="fa-solid fa-check text-emerald-500 mt-0.5"></i> Backup para exportar e importar seus dados</li>
+                            <li class="flex gap-3"><i class="fa-solid fa-check text-emerald-500 mt-0.5"></i> App instalável no celular e no computador</li>
+                        </ul>
+                        <button onclick="openAuth('register')" class="mt-8 w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold shadow-lg shadow-blue-500/25 transition-all">
+                            Começar agora — 14 dias grátis
+                        </button>
+                        <p class="mt-3 text-center text-xs text-slate-400">Já tem conta? <button onclick="openAuth('login')" class="font-bold text-blue-600 hover:underline">Entrar</button></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ -->
+        <section id="lp-faq" class="max-w-3xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+            <div class="text-center">
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">Perguntas frequentes</h2>
+            </div>
+            <div class="mt-10 divide-y divide-slate-200 border-y border-slate-200">
+                <details class="group py-4">
+                    <summary class="flex items-center justify-between cursor-pointer list-none font-bold text-slate-800 text-sm sm:text-base">
+                        Preciso instalar alguma coisa? <i class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform group-open:rotate-180"></i>
+                    </summary>
+                    <p class="mt-2 text-sm text-slate-500 leading-relaxed">Não. O FinançasPro funciona direto no navegador do celular ou do computador. Se quiser, dá para instalar como app pelo botão “Instalar” — sem passar por loja.</p>
+                </details>
+                <details class="group py-4">
+                    <summary class="flex items-center justify-between cursor-pointer list-none font-bold text-slate-800 text-sm sm:text-base">
+                        Meus dados ficam salvos? <i class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform group-open:rotate-180"></i>
+                    </summary>
+                    <p class="mt-2 text-sm text-slate-500 leading-relaxed">Sim. Tudo fica na sua conta e sincroniza na nuvem, então você abre no celular e no computador com os mesmos números. Você também pode exportar um backup quando quiser.</p>
+                </details>
+                <details class="group py-4">
+                    <summary class="flex items-center justify-between cursor-pointer list-none font-bold text-slate-800 text-sm sm:text-base">
+                        Como funciona o teste grátis? <i class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform group-open:rotate-180"></i>
+                    </summary>
+                    <p class="mt-2 text-sm text-slate-500 leading-relaxed">São 14 dias com acesso completo, sem limite de recursos. Ao final, é só assinar por R$ 19,99/mês para continuar.</p>
+                </details>
+                <details class="group py-4">
+                    <summary class="flex items-center justify-between cursor-pointer list-none font-bold text-slate-800 text-sm sm:text-base">
+                        Posso cancelar? <i class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform group-open:rotate-180"></i>
+                    </summary>
+                    <p class="mt-2 text-sm text-slate-500 leading-relaxed">Sim, pelo seu perfil dentro do app. Você mantém o acesso até o fim do período mensal já pago e não há novas cobranças depois disso.</p>
+                </details>
+                <details class="group py-4">
+                    <summary class="flex items-center justify-between cursor-pointer list-none font-bold text-slate-800 text-sm sm:text-base">
+                        Funciona no iPhone e no Android? <i class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform group-open:rotate-180"></i>
+                    </summary>
+                    <p class="mt-2 text-sm text-slate-500 leading-relaxed">Funciona nos dois, em qualquer navegador moderno. No Android o próprio Chrome oferece instalar; no iPhone, use “Compartilhar → Adicionar à Tela de Início”.</p>
+                </details>
+                <details class="group py-4">
+                    <summary class="flex items-center justify-between cursor-pointer list-none font-bold text-slate-800 text-sm sm:text-base">
+                        A importação de fatura por IA é confiável? <i class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform group-open:rotate-180"></i>
+                    </summary>
+                    <p class="mt-2 text-sm text-slate-500 leading-relaxed">A IA sugere os lançamentos e a categoria de cada um; você revisa e ajusta antes de confirmar. O total entra automaticamente no cartão e no mês corretos.</p>
+                </details>
+            </div>
+        </section>
+
+        <!-- CTA FINAL -->
+        <section class="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-950 text-white">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 py-16 sm:py-20 text-center">
+                <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Comece a planejar o seu ano hoje</h2>
+                <p class="mt-3 text-slate-300">14 dias grátis. Leva menos de um minuto para criar a conta.</p>
+                <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+                    <button onclick="openAuth('register')" class="inline-flex items-center justify-center gap-2 bg-white text-slate-900 font-bold text-sm px-6 py-3.5 rounded-xl shadow-xl hover:bg-slate-100 transition-all active:scale-95">
+                        <i class="fa-solid fa-rocket text-blue-600"></i> Criar conta grátis
+                    </button>
+                    <button onclick="promptInstallApp()" class="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/25 text-white font-bold text-sm px-6 py-3.5 rounded-xl transition-all active:scale-95">
+                        <i class="fa-solid fa-circle-down text-sky-300"></i> Instalar o app
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- RODAPÉ -->
+        <footer class="bg-slate-950 text-slate-400">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 py-10 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <img src="assets/financaPro_logo_horizontal_texto_branco.png" alt="FinançasPro" class="h-7 w-auto opacity-90">
+                </div>
+                <p class="text-xs">© 2026 FinançasPro · Utopia Desenvolvimentos. Todos os direitos reservados.</p>
+                <div class="flex items-center gap-4 text-sm font-semibold">
+                    <button onclick="openAuth('login')" class="hover:text-white transition-colors">Entrar</button>
+                    <button onclick="openAuth('register')" class="hover:text-white transition-colors">Criar conta</button>
+                </div>
+            </div>
+        </footer>
+    </div>
+
     <!-- AUTHENTICATION SCREEN -->
-    <div id="authScreen" class="fixed inset-0 bg-gradient-to-br from-slate-900 via-blue-950 to-slate-950 z-50 flex items-center justify-center p-4 overflow-y-auto">
+    <div id="authScreen" class="hidden fixed inset-0 bg-gradient-to-br from-slate-900 via-blue-950 to-slate-950 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <button type="button" onclick="backToLanding()" class="absolute top-4 left-4 z-[70] flex items-center gap-2 text-xs font-bold text-slate-300 hover:text-white bg-white/10 hover:bg-white/20 border border-white/20 px-3 py-2 rounded-lg transition-colors">
+            <i class="fa-solid fa-arrow-left"></i> Voltar
+        </button>
         <!-- Google/Biometric Loading Overlay -->
         <div id="authLoader" class="absolute inset-0 bg-slate-950/85 backdrop-blur-sm z-[60] flex flex-col items-center justify-center hidden">
             <div class="relative w-20 h-20 flex items-center justify-center">
@@ -333,20 +656,14 @@
                                     <i class="fa-solid fa-plus"></i> Nova Categoria
                                 </button>
                             </div>
-                            <div class="p-6">
-                                <div class="overflow-x-auto">
-                                    <table class="w-full text-left border-collapse">
-                                        <thead>
-                                            <tr class="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
-                                                <th class="pb-3 w-1/2">Categoria</th>
-                                                <th class="pb-3 text-right">Valor (R$)</th>
-                                                <th class="pb-3 text-center w-28">Ações</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="incomeTableBody" class="divide-y divide-slate-100">
-                                            <!-- Dynamic Income Rows -->
-                                        </tbody>
-                                    </table>
+                            <div class="p-4 sm:p-6">
+                                <div class="hidden sm:flex items-center gap-3 pb-3 border-b border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                                    <span class="flex-1">Categoria</span>
+                                    <span class="w-[150px] text-right">Valor (R$)</span>
+                                    <span class="w-[64px] text-center">Ações</span>
+                                </div>
+                                <div id="incomeTableBody" class="divide-y divide-slate-100">
+                                    <!-- Dynamic Income Rows -->
                                 </div>
                             </div>
                         </div>
@@ -362,20 +679,14 @@
                                     <i class="fa-solid fa-plus"></i> Nova Categoria
                                 </button>
                             </div>
-                            <div class="p-6">
-                                <div class="overflow-x-auto">
-                                    <table class="w-full text-left border-collapse">
-                                        <thead>
-                                            <tr class="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
-                                                <th class="pb-3 w-1/2">Categoria</th>
-                                                <th class="pb-3 text-right">Valor (R$)</th>
-                                                <th class="pb-3 text-center w-28">Ações</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="expenseTableBody" class="divide-y divide-slate-100">
-                                            <!-- Dynamic Expense Rows -->
-                                        </tbody>
-                                    </table>
+                            <div class="p-4 sm:p-6">
+                                <div class="hidden sm:flex items-center gap-3 pb-3 border-b border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                                    <span class="flex-1">Categoria</span>
+                                    <span class="w-[150px] text-right">Valor (R$)</span>
+                                    <span class="w-[64px] text-center">Ações</span>
+                                </div>
+                                <div id="expenseTableBody" class="divide-y divide-slate-100">
+                                    <!-- Dynamic Expense Rows -->
                                 </div>
                             </div>
                         </div>
@@ -952,6 +1263,13 @@
         </div>
     </div>
 
+    <!-- Botão flutuante "Instalar FinançasPro" — aparece só quando o navegador permite instalar o PWA -->
+    <button id="installAppBtn" type="button" onclick="promptInstallApp()"
+        class="hidden fixed bottom-20 right-4 sm:bottom-5 sm:right-5 z-[90] items-center gap-2.5 bg-white hover:bg-slate-100 text-slate-900 font-bold text-sm px-5 py-3.5 rounded-full shadow-2xl border border-slate-200 transition-all active:scale-95">
+        <i class="fa-solid fa-circle-down text-blue-600 text-base"></i>
+        <span>Instalar FinançasPro</span>
+    </button>
+
     <!-- Notifications and Toast Alert -->
     <div id="toast" class="fixed bottom-5 right-5 z-[100] transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
         <div class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 border border-slate-700">
@@ -1000,9 +1318,10 @@
         let currentEntitlement = null;
 
         function getDefaultAppState() {
+            const now = new Date();
             return {
-                currentYear: 2026,
-                currentMonthIndex: 0,
+                currentYear: now.getFullYear() < 2026 ? 2026 : now.getFullYear(),
+                currentMonthIndex: now.getMonth(),
                 carryoverMode: true,
                 savingGoalPercentage: 15,
                 yearsData: {},
@@ -1020,13 +1339,57 @@
         // Invoice AI Import state
         let selectedInvoiceFile = null;
         let diagCardSelection = null;
-        let cardLedgerMobileMonth = 0;
+        let cardLedgerMobileMonth = new Date().getMonth();
+
+        // ================= LANDING (página inicial) =================
+        // Vai direto para o app quando: roda como PWA instalado, tem ?app=1 na URL,
+        // ou já existe sessão do Firebase salva (usuário recorrente) — evita o
+        // "flash" da landing para quem já usa o produto.
+        const wantsAppDirect = (function () {
+            try {
+                if (new URLSearchParams(location.search).get('app') === '1') return true;
+                if (window.matchMedia('(display-mode: standalone)').matches) return true;
+                if (window.navigator.standalone === true) return true;
+                for (let i = 0; i < localStorage.length; i++) {
+                    if ((localStorage.key(i) || '').indexOf('firebase:authUser:') === 0) return true;
+                }
+            } catch (e) {}
+            return false;
+        })();
+
+        function openAuth(tab) {
+            document.getElementById('landingScreen').classList.add('hidden');
+            const menu = document.getElementById('lpMobileMenu');
+            if (menu) menu.classList.add('hidden');
+            document.getElementById('authScreen').classList.remove('hidden');
+            switchAuthTab(tab === 'register' ? 'register' : 'login');
+            window.scrollTo(0, 0);
+        }
+
+        function backToLanding() {
+            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('landingScreen').classList.remove('hidden');
+        }
+
+        function toggleLandingMenu() {
+            const menu = document.getElementById('lpMobileMenu');
+            const icon = document.getElementById('lpMenuIcon');
+            const nowHidden = menu.classList.toggle('hidden');
+            if (icon) icon.className = nowHidden ? 'fa-solid fa-bars text-lg' : 'fa-solid fa-xmark text-lg';
+        }
+
+        // Define a primeira tela antes mesmo do Firebase responder
+        if (wantsAppDirect) {
+            document.getElementById('landingScreen').classList.add('hidden');
+            document.getElementById('authScreen').classList.remove('hidden');
+        }
 
         // Start App — a fonte da verdade de "logado ou não" é o próprio Firebase Auth
         auth.onAuthStateChanged(function(user) {
             const loader = document.getElementById('authLoader');
             if (user) {
                 currentUser = user;
+                document.getElementById('landingScreen').classList.add('hidden');
                 loadEntitlement().then(function() {
                     loader.classList.add('hidden');
                     document.getElementById('authScreen').classList.add('hidden');
@@ -1065,7 +1428,15 @@
                 loader.classList.add('hidden');
                 document.getElementById('mainApp').classList.add('hidden');
                 document.getElementById('subscriptionScreen').classList.add('hidden');
-                document.getElementById('authScreen').classList.remove('hidden');
+                if (wantsAppDirect) {
+                    // veio como app instalado / ?app=1: pula a landing e vai pro login
+                    document.getElementById('landingScreen').classList.add('hidden');
+                    document.getElementById('authScreen').classList.remove('hidden');
+                } else {
+                    // visitante novo: mostra a página de apresentação
+                    document.getElementById('authScreen').classList.add('hidden');
+                    document.getElementById('landingScreen').classList.remove('hidden');
+                }
             }
         });
 
@@ -1203,6 +1574,12 @@
             return db.collection('users').doc(uid).get().then(function(docSnap) {
                 if (docSnap.exists) {
                     appState = Object.assign(getDefaultAppState(), docSnap.data());
+                    // Retoma o mês em que o usuário estava; se o dado salvo for inválido
+                    // (contas antigas, valor corrompido), cai no mês atual do calendário.
+                    const savedMonth = Number(appState.currentMonthIndex);
+                    appState.currentMonthIndex = Number.isInteger(savedMonth) && savedMonth >= 0 && savedMonth <= 11
+                        ? savedMonth
+                        : new Date().getMonth();
                 } else {
                     appState = getDefaultAppState();
                     return saveAppState();
@@ -2134,37 +2511,31 @@
             tbody.innerHTML = '';
 
             categories.forEach(key => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50/60 transition-colors group";
+                const row = document.createElement('div');
+                row.className = "flex items-center gap-2 sm:gap-3 py-2.5 hover:bg-slate-50/60 transition-colors";
                 const isSobra = key === "Sobra do Mês Anterior";
                 const isDisabled = isSobra && appState.carryoverMode;
 
-                tr.innerHTML = `
-                    <td class="py-3 font-semibold text-slate-700 text-sm">
-                        <div class="flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-                            <span>${escapeHtml(key)}</span>
-                            ${isDisabled ? '<span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-lg font-bold"><i class="fa-solid fa-robot text-blue-500"></i> Automático</span>' : ''}
-                        </div>
-                    </td>
-                    <td class="py-3 text-right">
-                        <div class="inline-flex items-center bg-slate-50 border border-slate-200 rounded-xl px-3 max-w-[150px] shadow-sm">
-                            <span class="text-xs text-slate-400 font-bold mr-1">R$</span>
-                            <input type="number" step="0.01" min="0" value="${data[key] !== undefined && data[key] !== 0 ? data[key] : ''}"
-                                data-key="${escapeHtml(key)}"
-                                class="bg-transparent text-right font-bold text-slate-700 focus:outline-none w-full py-1 text-sm"
-                                ${isDisabled ? 'disabled placeholder="-"' : ''}
-                                onchange="updateInputValue('income', this.dataset.key, this.value)">
-                        </div>
-                    </td>
-                    <td class="py-3 text-center">
-                        <div class="flex justify-center items-center gap-2">
-                            <button data-key="${escapeHtml(key)}" onclick="openEditCategoryModal('income', this.dataset.key)" class="text-slate-300 hover:text-blue-600 p-1"><i class="fa-solid fa-pen-to-square text-sm"></i></button>
-                            <button data-key="${escapeHtml(key)}" onclick="deleteCategory('income', this.dataset.key)" class="text-slate-300 hover:text-rose-500 p-1"><i class="fa-solid fa-trash-can text-sm"></i></button>
-                        </div>
-                    </td>
+                row.innerHTML = `
+                    <div class="flex items-center gap-2 min-w-0 flex-1">
+                        <span class="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0"></span>
+                        <span class="font-semibold text-slate-700 text-sm truncate">${escapeHtml(key)}</span>
+                        ${isDisabled ? '<span class="hidden sm:inline-flex text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-lg font-bold items-center gap-1"><i class="fa-solid fa-robot text-blue-500"></i> Automático</span>' : ''}
+                    </div>
+                    <div class="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-2.5 shadow-sm w-[120px] sm:w-[150px] shrink-0">
+                        <span class="text-xs text-slate-400 font-bold mr-1">R$</span>
+                        <input type="text" inputmode="decimal" autocomplete="off" value="${data[key] !== undefined && data[key] !== 0 ? data[key] : ''}"
+                            data-key="${escapeHtml(key)}"
+                            class="bg-transparent text-right font-bold text-slate-700 focus:outline-none w-full py-2 text-sm min-w-0"
+                            ${isDisabled ? 'disabled placeholder="-"' : 'placeholder="0,00"'}
+                            onchange="updateInputValue('income', this.dataset.key, this.value)">
+                    </div>
+                    <div class="flex items-center justify-center gap-0.5 shrink-0 w-[64px]">
+                        <button data-key="${escapeHtml(key)}" onclick="openEditCategoryModal('income', this.dataset.key)" class="text-slate-300 hover:text-blue-600 p-1.5"><i class="fa-solid fa-pen-to-square text-sm"></i></button>
+                        <button data-key="${escapeHtml(key)}" onclick="deleteCategory('income', this.dataset.key)" class="text-slate-300 hover:text-rose-500 p-1.5"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                    </div>
                 `;
-                tbody.appendChild(tr);
+                tbody.appendChild(row);
             });
         }
 
@@ -2177,32 +2548,27 @@
             tbody.innerHTML = '';
 
             categories.forEach(key => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50/60 transition-colors group";
-                tr.innerHTML = `
-                    <td class="py-3 font-semibold text-slate-700 text-sm">
-                        <div class="flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
-                            <span>${escapeHtml(key)}</span>
-                        </div>
-                    </td>
-                    <td class="py-3 text-right">
-                        <div class="inline-flex items-center bg-slate-50 border border-slate-200 rounded-xl px-3 max-w-[150px] shadow-sm">
-                            <span class="text-xs text-slate-400 font-bold mr-1">R$</span>
-                            <input type="number" step="0.01" min="0" value="${data[key] !== undefined && data[key] !== 0 ? data[key] : ''}"
-                                data-key="${escapeHtml(key)}"
-                                class="bg-transparent text-right font-bold text-slate-700 focus:outline-none w-full py-1 text-sm"
-                                onchange="updateInputValue('expenses', this.dataset.key, this.value)">
-                        </div>
-                    </td>
-                    <td class="py-3 text-center">
-                        <div class="flex justify-center items-center gap-2">
-                            <button data-key="${escapeHtml(key)}" onclick="openEditCategoryModal('expense', this.dataset.key)" class="text-slate-300 hover:text-blue-600 p-1"><i class="fa-solid fa-pen-to-square text-sm"></i></button>
-                            <button data-key="${escapeHtml(key)}" onclick="deleteCategory('expense', this.dataset.key)" class="text-slate-300 hover:text-rose-500 p-1"><i class="fa-solid fa-trash-can text-sm"></i></button>
-                        </div>
-                    </td>
+                const row = document.createElement('div');
+                row.className = "flex items-center gap-2 sm:gap-3 py-2.5 hover:bg-slate-50/60 transition-colors";
+                row.innerHTML = `
+                    <div class="flex items-center gap-2 min-w-0 flex-1">
+                        <span class="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0"></span>
+                        <span class="font-semibold text-slate-700 text-sm truncate">${escapeHtml(key)}</span>
+                    </div>
+                    <div class="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-2.5 shadow-sm w-[120px] sm:w-[150px] shrink-0">
+                        <span class="text-xs text-slate-400 font-bold mr-1">R$</span>
+                        <input type="text" inputmode="decimal" autocomplete="off" value="${data[key] !== undefined && data[key] !== 0 ? data[key] : ''}"
+                            data-key="${escapeHtml(key)}"
+                            class="bg-transparent text-right font-bold text-slate-700 focus:outline-none w-full py-2 text-sm min-w-0"
+                            placeholder="0,00"
+                            onchange="updateInputValue('expenses', this.dataset.key, this.value)">
+                    </div>
+                    <div class="flex items-center justify-center gap-0.5 shrink-0 w-[64px]">
+                        <button data-key="${escapeHtml(key)}" onclick="openEditCategoryModal('expense', this.dataset.key)" class="text-slate-300 hover:text-blue-600 p-1.5"><i class="fa-solid fa-pen-to-square text-sm"></i></button>
+                        <button data-key="${escapeHtml(key)}" onclick="deleteCategory('expense', this.dataset.key)" class="text-slate-300 hover:text-rose-500 p-1.5"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                    </div>
                 `;
-                tbody.appendChild(tr);
+                tbody.appendChild(row);
             });
         }
 
@@ -2291,7 +2657,7 @@
                         <button onclick="changeCardLedgerMobileMonth(-1)" class="text-slate-400 hover:text-indigo-600 p-1"><i class="fa-solid fa-chevron-left"></i></button>
                         <div class="flex-1 inline-flex items-center bg-white border border-slate-200 rounded-xl px-3 shadow-sm" ${mobileIsDetailed ? 'title="Detalhado via IA — editar aqui substitui o detalhamento por categoria"' : ''}>
                             <span class="text-xs text-slate-400 font-bold mr-1">R$</span>
-                            <input type="number" step="0.01" min="0" value="${mobileVal || ''}"
+                            <input type="text" inputmode="decimal" autocomplete="off" value="${mobileVal || ''}"
                                 data-card="${escapeHtml(card)}" data-month="${cardLedgerMobileMonth}"
                                 class="bg-transparent text-right font-bold text-slate-700 focus:outline-none w-full py-1.5 text-sm"
                                 onchange="updateCardValue(this.dataset.card, Number(this.dataset.month), this.value)">
@@ -2332,7 +2698,7 @@
                         <td class="p-1 text-center min-w-[90px]">
                             <div class="inline-flex items-center bg-slate-50 border border-slate-100 rounded-xl px-2 shadow-sm" ${isDetailed ? 'title="Detalhado via IA — editar aqui substitui o detalhamento por categoria"' : ''}>
                                 <span class="text-[10px] text-slate-400 mr-0.5">R$</span>
-                                <input type="number" step="0.01" min="0" value="${val || ''}"
+                                <input type="text" inputmode="decimal" autocomplete="off" value="${val || ''}"
                                     data-card="${escapeHtml(card)}" data-month="${m}"
                                     class="bg-transparent text-right font-bold text-slate-700 text-xs focus:outline-none w-full py-1"
                                     onchange="updateCardValue(this.dataset.card, Number(this.dataset.month), this.value)">
@@ -2411,7 +2777,7 @@
                             onchange="updateCardItemField(Number(this.dataset.idx), 'description', this.value)">
                     </td>
                     <td class="py-2 text-right pr-2">
-                        <input type="number" step="0.01" min="0" value="${item.value}" data-idx="${idx}"
+                        <input type="text" inputmode="decimal" autocomplete="off" value="${item.value}" data-idx="${idx}"
                             class="w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-bold text-right focus:outline-none focus:ring-1 focus:ring-violet-500"
                             onchange="updateCardItemField(Number(this.dataset.idx), 'value', this.value)">
                     </td>
@@ -2473,7 +2839,7 @@
             }
 
             if (field === 'value') {
-                items[idx].value = Math.abs(Number(rawValue) || 0);
+                items[idx].value = Math.abs(parseMoney(rawValue));
             } else {
                 items[idx][field] = rawValue;
             }
@@ -2526,23 +2892,26 @@
         function changeYear(delta) {
             appState.currentYear = Number(appState.currentYear) + delta;
             syncYearInput();
+            saveAppState();
             renderAll();
         }
 
         function handleYearChange(val) {
             appState.currentYear = Number(val) || 2026;
+            saveAppState();
             renderAll();
         }
 
         function selectMonth(idx) {
             appState.currentMonthIndex = idx;
+            saveAppState();
             renderAll();
         }
 
         function updateInputValue(type, key, value) {
             const year = appState.currentYear;
             const month = appState.currentMonthIndex;
-            appState.yearsData[year][month][type][key] = Number(value) || 0;
+            appState.yearsData[year][month][type][key] = parseMoney(value);
             saveAppState();
             renderAll();
         }
@@ -2557,7 +2926,7 @@
                 if (diagCardSelection === card) diagCardSelection = null;
             }
 
-            monthObj.cards[card] = Number(value) || 0;
+            monthObj.cards[card] = parseMoney(value);
             saveAppState();
             renderAll();
 
@@ -3021,6 +3390,31 @@
             r.readAsText(file);
         }
 
+        // Converte o que o usuário digitou num campo de valor para número.
+        // No teclado numérico do Android em pt-BR o separador decimal é vírgula,
+        // e <input type="number"> rejeita vírgula (retorna ""), então os campos de
+        // valor são type="text" inputmode="decimal" e passam por aqui.
+        function parseMoney(raw) {
+            if (typeof raw === 'number') return isFinite(raw) ? raw : 0;
+            let s = String(raw == null ? '' : raw).trim();
+            if (!s) return 0;
+            s = s.replace(/[R$\s ]/g, '');
+            if (s.indexOf(',') > -1) {
+                // Tem vírgula: no padrão pt-BR a vírgula é o separador decimal
+                // e o ponto é separador de milhar.
+                s = s.replace(/\./g, '').replace(',', '.');
+            } else if ((s.match(/\./g) || []).length > 1) {
+                // Vários pontos: todos são separadores de milhar (ex.: "1.234.567").
+                s = s.replace(/\./g, '');
+            } else if (/^\d{1,3}\.\d{3}$/.test(s)) {
+                // Um ponto com exatamente 3 casas depois e sem vírgula: milhar (ex.: "2.000" = 2000).
+                s = s.replace('.', '');
+            }
+            // Demais casos com um único ponto (ex.: "1234.56", "1.5"): ponto é o decimal.
+            const n = parseFloat(s);
+            return isFinite(n) && n > 0 ? n : 0;
+        }
+
         // FORMATTERS
         function formatCurrency(value) {
             return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
@@ -3051,6 +3445,73 @@
                 });
             });
         }
+    </script>
+
+    <!-- Botão "Instalar FinançasPro" (prompt nativo de instalação do PWA) -->
+    <script>
+        (function () {
+            let deferredInstallPrompt = null;
+            const btn = document.getElementById('installAppBtn');
+
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                || window.navigator.standalone === true;
+            const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+
+            function showBtn() {
+                if (!btn || isStandalone) return;
+                btn.classList.remove('hidden');
+                btn.classList.add('flex');
+            }
+            function hideBtn() {
+                if (!btn) return;
+                btn.classList.add('hidden');
+                btn.classList.remove('flex');
+            }
+
+            // Chrome/Edge/Android/desktop: guarda o evento e mostra o botão
+            window.addEventListener('beforeinstallprompt', function (e) {
+                e.preventDefault();
+                deferredInstallPrompt = e;
+                showBtn();
+            });
+
+            // iOS/Safari não dispara beforeinstallprompt — mostra o botão com instrução manual
+            if (isIOS && !isStandalone) showBtn();
+
+            window.promptInstallApp = function () {
+                if (deferredInstallPrompt) {
+                    deferredInstallPrompt.prompt();
+                    deferredInstallPrompt.userChoice.finally(function () {
+                        deferredInstallPrompt = null;
+                        hideBtn();
+                    });
+                    return;
+                }
+                if (isIOS) {
+                    if (typeof showToast === 'function') {
+                        showToast('No iPhone/iPad: toque em Compartilhar e depois em "Adicionar à Tela de Início".', 'fa-square-arrow-up-right', 'text-blue-400');
+                    } else {
+                        alert('No iPhone/iPad: toque em Compartilhar e depois em "Adicionar à Tela de Início".');
+                    }
+                    return;
+                }
+                // Já instalado, ou navegador sem suporte
+                if (typeof showToast === 'function') {
+                    showToast('O app já está instalado ou seu navegador não oferece instalação.', 'fa-circle-info', 'text-slate-400');
+                }
+                hideBtn();
+            };
+
+            window.addEventListener('appinstalled', function () {
+                deferredInstallPrompt = null;
+                hideBtn();
+                if (typeof showToast === 'function') {
+                    showToast('FinançasPro instalado! Abra pelo ícone na tela inicial.', 'fa-circle-check', 'text-emerald-400');
+                }
+            });
+
+            if (isStandalone) hideBtn();
+        })();
     </script>
 </body>
 </html>

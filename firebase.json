@@ -17,6 +17,23 @@
         "**/.*",
         "**/node_modules/**",
         "index - Copia.html"
+      ],
+      "redirects": [
+        {
+          "source": "/",
+          "destination": "https://financaspro.web.app/index.html",
+          "type": 301
+        },
+        {
+          "source": "/index.html",
+          "destination": "https://financaspro.web.app/index.html",
+          "type": 301
+        },
+        {
+          "source": "/manifest.json",
+          "destination": "https://financaspro.web.app/manifest.json",
+          "type": 301
+        }
       ]
     },
     {

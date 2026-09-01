@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://financaspro.web.app/sitemap.xml
