@@ -16,7 +16,12 @@
         "functions/**",
         "**/.*",
         "**/node_modules/**",
-        "index - Copia.html"
+        "index - Copia.html",
+        "*.md",
+        "deploy_log.txt",
+        "docs/**",
+        "js/**",
+        "styles/**"
       ],
       "redirects": [
         {
@@ -45,7 +50,12 @@
         "functions/**",
         "**/.*",
         "**/node_modules/**",
-        "index - Copia.html"
+        "index - Copia.html",
+        "*.md",
+        "deploy_log.txt",
+        "docs/**",
+        "js/**",
+        "styles/**"
       ]
     }
   ]
