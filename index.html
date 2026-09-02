@@ -78,12 +78,95 @@
         [id^="lp-"] {
             scroll-margin-top: 76px;
         }
-        .lp-fade-in {
-            animation: lpFadeIn .6s ease both;
+        /* Motion system da landing: entrada suave, profundidade e CTAs vivos. */
+        .lp-hero-grid {
+            background-image:
+                linear-gradient(rgba(56, 189, 248, .055) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(56, 189, 248, .055) 1px, transparent 1px);
+            background-size: 48px 48px;
+            mask-image: linear-gradient(to bottom, black 5%, transparent 92%);
         }
-        @keyframes lpFadeIn {
-            from { opacity: 0; transform: translateY(12px); }
-            to { opacity: 1; transform: translateY(0); }
+        .lp-hero-orb {
+            animation: lpOrbDrift 9s ease-in-out infinite alternate;
+            will-change: transform;
+        }
+        .lp-hero-copy > * {
+            opacity: 0;
+            animation: lpHeroEnter .8s cubic-bezier(.22, 1, .36, 1) forwards;
+        }
+        .lp-hero-copy > :nth-child(1) { animation-delay: .08s; }
+        .lp-hero-copy > :nth-child(2) { animation-delay: .18s; }
+        .lp-hero-copy > :nth-child(3) { animation-delay: .32s; }
+        .lp-hero-copy > :nth-child(4) { animation-delay: .44s; }
+        .lp-hero-copy > :nth-child(5) { animation-delay: .56s; }
+        .lp-hero-visual {
+            opacity: 0;
+            animation: lpVisualEnter 1s .25s cubic-bezier(.16, 1, .3, 1) forwards;
+            perspective: 1200px;
+        }
+        .lp-hero-product {
+            animation: lpProductFloat 6s 1.25s ease-in-out infinite;
+            transform-origin: 55% 60%;
+            will-change: transform;
+            filter: drop-shadow(0 35px 45px rgba(2, 6, 23, .48));
+        }
+        .lp-shine { position: relative; isolation: isolate; overflow: hidden; }
+        .lp-shine::after {
+            content: '';
+            position: absolute;
+            z-index: -1;
+            inset: -2px;
+            background: linear-gradient(110deg, transparent 20%, rgba(255,255,255,.55) 45%, transparent 70%);
+            transform: translateX(-130%);
+            animation: lpButtonShine 4.5s 1.4s ease-in-out infinite;
+        }
+        .lp-cta {
+            transform: translateZ(0);
+            transition: transform .28s cubic-bezier(.22, 1, .36, 1), box-shadow .28s ease, background-color .28s ease, border-color .28s ease;
+        }
+        .lp-cta:hover { transform: translateY(-3px) scale(1.02); }
+        .lp-cta:hover i { transform: translateX(2px) rotate(-4deg); }
+        .lp-cta i { transition: transform .28s cubic-bezier(.22, 1, .36, 1); }
+        .lp-cta:active { transform: translateY(0) scale(.97); }
+        .lp-trust-item { transition: transform .25s ease, color .25s ease; }
+        .lp-trust-item:hover { transform: translateY(-2px); color: white; }
+        .lp-reveal {
+            opacity: 0;
+            transform: translateY(30px) scale(.985);
+            transition: opacity .72s cubic-bezier(.22, 1, .36, 1), transform .72s cubic-bezier(.22, 1, .36, 1);
+            transition-delay: var(--reveal-delay, 0ms);
+            will-change: opacity, transform;
+        }
+        .lp-reveal.lp-from-left { transform: translateX(-38px); }
+        .lp-reveal.lp-from-right { transform: translateX(38px); }
+        .lp-reveal.is-visible { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+        @keyframes lpHeroEnter {
+            from { opacity: 0; transform: translateY(24px); filter: blur(8px); }
+            to { opacity: 1; transform: translateY(0); filter: blur(0); }
+        }
+        @keyframes lpVisualEnter {
+            from { opacity: 0; transform: translate3d(45px, 25px, 0) rotateY(-8deg) scale(.92); }
+            to { opacity: 1; transform: translate3d(0, 0, 0) rotateY(0) scale(1); }
+        }
+        @keyframes lpProductFloat {
+            0%, 100% { transform: translateY(0) rotate(.2deg); }
+            50% { transform: translateY(-12px) rotate(-.35deg); }
+        }
+        @keyframes lpOrbDrift {
+            from { transform: translate3d(-3%, -2%, 0) scale(.95); }
+            to { transform: translate3d(5%, 4%, 0) scale(1.08); }
+        }
+        @keyframes lpButtonShine {
+            0%, 55% { transform: translateX(-130%); }
+            78%, 100% { transform: translateX(130%); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            html { scroll-behavior: auto; }
+            .lp-hero-copy > *, .lp-hero-visual, .lp-hero-product, .lp-hero-orb, .lp-shine::after {
+                animation: none !important; opacity: 1 !important; transform: none !important;
+            }
+            .lp-reveal, .lp-reveal.is-visible { opacity: 1; transform: none; transition: none; }
+            .lp-cta { transition: none; }
         }
         ::-webkit-scrollbar {
             width: 6px;
@@ -140,39 +223,48 @@
         </header>
 
         <!-- HERO -->
-        <section id="lp-top" class="relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-950 to-slate-950 text-white pt-[68px]">
-            <div class="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24 grid lg:grid-cols-2 gap-12 items-center">
-                <div class="lp-fade-in">
-                    <p class="text-xs sm:text-sm font-bold tracking-widest uppercase text-sky-400 mb-4">Utopia Desenvolvimentos</p>
-                    <h1 class="text-4xl sm:text-5xl lg:text-[3.4rem] font-extrabold leading-[1.1] tracking-tight">
+        <section id="lp-top" class="relative overflow-hidden bg-[#07162f] text-white pt-[68px]">
+            <div class="lp-hero-grid absolute inset-0 pointer-events-none"></div>
+            <div class="lp-hero-orb absolute -top-40 right-[10%] w-[30rem] h-[30rem] rounded-full bg-blue-500/10 blur-[120px] pointer-events-none"></div>
+            <div class="lp-hero-orb absolute -bottom-64 left-[15%] w-[26rem] h-[26rem] rounded-full bg-cyan-400/[.06] blur-[110px] pointer-events-none" style="animation-delay:-3s"></div>
+            <div class="relative max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-9 lg:py-7 grid lg:grid-cols-[.9fr_1.1fr] gap-5 lg:gap-2 items-center lg:min-h-[470px]">
+                <div class="lp-hero-copy relative z-10 max-w-2xl">
+                    <div class="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-400/10 px-3.5 py-1.5 mb-4 text-[10px] sm:text-[11px] font-bold tracking-[.18em] uppercase text-sky-300 backdrop-blur-md">
+                        <span class="relative flex h-2 w-2"><span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-300 opacity-60"></span><span class="relative inline-flex h-2 w-2 rounded-full bg-sky-300"></span></span>
+                        Planejamento financeiro anual
+                    </div>
+                    <h1 class="text-[2.2rem] sm:text-[2.75rem] lg:text-[3.05rem] font-extrabold leading-[1.04] tracking-[-.035em]">
                         Suas finanças do <span class="text-sky-400">ano inteiro</span>, planejadas mês a mês
                     </h1>
-                    <p class="mt-5 text-base sm:text-lg text-slate-300 leading-relaxed max-w-xl">
+                    <p class="mt-4 text-sm sm:text-base text-slate-300 leading-relaxed max-w-xl">
                         Receitas, despesas e cartões de crédito num só lugar. O FinançasPro projeta o seu ano, consolida a fatura de cada cartão e mostra um diagnóstico automático da sua saúde financeira.
                     </p>
-                    <div class="mt-8 flex flex-col sm:flex-row gap-3">
-                        <button onclick="openAuth('register')" class="inline-flex items-center justify-center gap-2 bg-white text-slate-900 font-bold text-sm px-6 py-3.5 rounded-xl shadow-xl hover:bg-slate-100 transition-all active:scale-95">
-                            <i class="fa-solid fa-rocket text-blue-600"></i> Criar conta grátis
+                    <div class="mt-6 flex flex-col sm:flex-row gap-3">
+                        <button onclick="openAuth('register')" class="lp-cta lp-shine inline-flex items-center justify-center gap-2 bg-white text-slate-900 font-extrabold text-sm px-5 py-3.5 rounded-xl shadow-[0_18px_50px_-14px_rgba(56,189,248,.8)] hover:shadow-[0_22px_60px_-14px_rgba(56,189,248,.95)]">
+                            Começar meus 14 dias grátis <i class="fa-solid fa-arrow-right text-blue-600"></i>
                         </button>
-                        <button onclick="promptInstallApp()" class="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/25 text-white font-bold text-sm px-6 py-3.5 rounded-xl transition-all active:scale-95">
+                        <button onclick="promptInstallApp()" class="lp-cta inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/15 border border-white/20 hover:border-white/40 text-white font-bold text-sm px-5 py-3.5 rounded-xl backdrop-blur-md">
                             <i class="fa-solid fa-circle-down text-sky-300"></i> Instalar o app
                         </button>
                     </div>
-                    <p class="mt-4 text-xs text-slate-400">14 dias grátis · Funciona no navegador · Cancele quando quiser</p>
+                    <p class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-slate-400">
+                        <span><i class="fa-solid fa-check text-emerald-400 mr-1.5"></i>Sem cartão de crédito</span>
+                        <span><i class="fa-solid fa-check text-emerald-400 mr-1.5"></i>Funciona no navegador</span>
+                        <span><i class="fa-solid fa-check text-emerald-400 mr-1.5"></i>Cancele quando quiser</span>
+                    </p>
                 </div>
-                <div class="lp-fade-in relative">
-                    <div class="absolute -inset-4 bg-blue-500/20 blur-3xl rounded-full"></div>
-                    <img src="Print_Telas/tela2_financasPro.jpeg" alt="Tela do FinançasPro com receitas e despesas do mês" loading="lazy"
-                        class="relative w-full rounded-2xl border border-white/10 shadow-2xl">
+                <div class="lp-hero-visual relative -mx-4 sm:mx-0 lg:-mr-8 mt-2 lg:mt-0" aria-label="Visão geral dos recursos do FinançasPro">
+                    <img src="assets/hero-financaspro-canva.png" alt="FinançasPro em um celular com painel anual, cartões, metas e gráficos financeiros"
+                        fetchpriority="high" decoding="async" class="lp-hero-product relative w-full max-w-[550px] mx-auto object-contain">
                 </div>
             </div>
             <!-- faixa de destaques -->
             <div class="border-t border-white/10 bg-white/5">
-                <div class="max-w-6xl mx-auto px-4 sm:px-6 py-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center text-xs sm:text-sm font-semibold text-slate-200">
-                    <div><i class="fa-solid fa-calendar-days text-sky-400 mr-1.5"></i> 12 meses planejados</div>
-                    <div><i class="fa-solid fa-credit-card text-sky-400 mr-1.5"></i> Cartões consolidados</div>
-                    <div><i class="fa-solid fa-robot text-sky-400 mr-1.5"></i> Fatura lida por IA</div>
-                    <div><i class="fa-solid fa-mobile-screen text-sky-400 mr-1.5"></i> Instalável no celular</div>
+                <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-xs sm:text-sm font-semibold text-slate-200">
+                    <div class="lp-trust-item"><i class="fa-solid fa-calendar-days text-sky-400 mr-1.5"></i> 12 meses planejados</div>
+                    <div class="lp-trust-item"><i class="fa-solid fa-credit-card text-sky-400 mr-1.5"></i> Cartões consolidados</div>
+                    <div class="lp-trust-item"><i class="fa-solid fa-robot text-sky-400 mr-1.5"></i> Fatura lida por IA</div>
+                    <div class="lp-trust-item"><i class="fa-solid fa-mobile-screen text-sky-400 mr-1.5"></i> Instalável no celular</div>
                 </div>
             </div>
         </section>
@@ -203,11 +295,12 @@
         </section>
 
         <!-- FUNCIONALIDADES -->
-        <section id="lp-features" class="bg-slate-50 border-y border-slate-100">
-            <div class="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+        <section id="lp-features" class="relative overflow-hidden bg-gradient-to-br from-[#0b2a62] via-[#123f91] to-[#1d4ed8] border-y border-blue-400/20">
+            <div class="absolute inset-0 lp-hero-grid opacity-40 pointer-events-none"></div>
+            <div class="relative max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
                 <div class="text-center max-w-2xl mx-auto">
-                    <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">Tudo que você precisa para fechar o mês no azul</h2>
-                    <p class="mt-3 text-slate-500">Um painel único para o planejamento do ano e o controle do dia a dia.</p>
+                    <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">Tudo que você precisa para fechar o mês no azul</h2>
+                    <p class="mt-3 text-blue-100">Um painel único para o planejamento do ano e o controle do dia a dia.</p>
                 </div>
                 <div class="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
@@ -245,16 +338,16 @@
         </section>
 
         <!-- PRINTS -->
-        <section id="lp-screens" class="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+        <section id="lp-screens" class="max-w-6xl mx-auto px-4 sm:px-6 py-14 sm:py-20">
             <div class="text-center max-w-2xl mx-auto">
                 <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">Por dentro do FinançasPro</h2>
                 <p class="mt-3 text-slate-500">Interface direta, pensada para lançar valores em segundos — no celular ou no computador.</p>
             </div>
-            <div class="mt-10 flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
-                <img src="Print_Telas/tela2_financasPro.jpeg" alt="Controle de receitas e despesas do mês" loading="lazy" class="snap-center shrink-0 w-[82%] sm:w-[46%] lg:w-[31%] rounded-2xl border border-slate-200 shadow-lg">
-                <img src="Print_Telas/tela3_financasPro.jpeg" alt="Cartões de crédito consolidados" loading="lazy" class="snap-center shrink-0 w-[82%] sm:w-[46%] lg:w-[31%] rounded-2xl border border-slate-200 shadow-lg">
-                <img src="Print_Telas/tela4_financasPro.jpeg" alt="Gráficos e diagnóstico financeiro" loading="lazy" class="snap-center shrink-0 w-[82%] sm:w-[46%] lg:w-[31%] rounded-2xl border border-slate-200 shadow-lg">
-                <img src="Print_Telas/tela5_financasPro.jpeg" alt="Importação de fatura com IA" loading="lazy" class="snap-center shrink-0 w-[82%] sm:w-[46%] lg:w-[31%] rounded-2xl border border-slate-200 shadow-lg">
+            <div class="mt-9 flex justify-start lg:justify-center gap-4 overflow-x-auto snap-x snap-mandatory pb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
+                <img src="Print_Telas/Tela_Receitas.jpeg" alt="Controle de receitas do mês" loading="lazy" class="snap-center shrink-0 w-[72%] max-w-[245px] sm:w-[38%] lg:w-[21%] lg:max-w-[225px] rounded-2xl border border-slate-200 shadow-lg">
+                <img src="Print_Telas/Tela_cartoes.jpeg" alt="Cartões de crédito consolidados" loading="lazy" class="snap-center shrink-0 w-[72%] max-w-[245px] sm:w-[38%] lg:w-[21%] lg:max-w-[225px] rounded-2xl border border-slate-200 shadow-lg">
+                <img src="Print_Telas/Tela_grafico.jpeg" alt="Gráficos de receitas e despesas" loading="lazy" class="snap-center shrink-0 w-[72%] max-w-[245px] sm:w-[38%] lg:w-[21%] lg:max-w-[225px] rounded-2xl border border-slate-200 shadow-lg">
+                <img src="Print_Telas/Tela_metasFinanceiras.jpeg" alt="Metas e diagnóstico financeiro anual" loading="lazy" class="snap-center shrink-0 w-[72%] max-w-[245px] sm:w-[38%] lg:w-[21%] lg:max-w-[225px] rounded-2xl border border-slate-200 shadow-lg">
             </div>
         </section>
 
@@ -3544,6 +3637,54 @@
             });
 
             if (isStandalone) hideBtn();
+        })();
+    </script>
+
+    <!-- Animações progressivas da landing page -->
+    <script>
+        (function initLandingMotion() {
+            const landing = document.getElementById('landingScreen');
+            if (!landing) return;
+
+            const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const sections = landing.querySelectorAll('section:not(#lp-top)');
+
+            sections.forEach((section) => {
+                const headingBlock = section.querySelector('.text-center');
+                if (headingBlock) {
+                    headingBlock.classList.add('lp-reveal');
+                }
+
+                const candidates = section.querySelectorAll(
+                    '.grid > div, .grid > article, img.rounded-2xl, details, .rounded-2xl.shadow-sm, .rounded-3xl'
+                );
+                candidates.forEach((element, index) => {
+                    if (element.closest('#lp-top') || element.classList.contains('lp-reveal')) return;
+                    element.classList.add('lp-reveal');
+                    element.style.setProperty('--reveal-delay', `${Math.min(index % 6, 5) * 85}ms`);
+                });
+            });
+
+            landing.querySelectorAll('button[onclick*="openAuth"], button[onclick*="promptInstallApp"]').forEach((button) => {
+                button.classList.add('lp-cta');
+            });
+
+            const revealItems = landing.querySelectorAll('.lp-reveal');
+            if (reduceMotion || !('IntersectionObserver' in window)) {
+                revealItems.forEach((item) => item.classList.add('is-visible'));
+                return;
+            }
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    entry.target.classList.toggle('is-visible', entry.isIntersecting);
+                });
+            }, {
+                threshold: 0.12,
+                rootMargin: '0px 0px -7% 0px'
+            });
+
+            revealItems.forEach((item) => observer.observe(item));
         })();
     </script>
 </body>
