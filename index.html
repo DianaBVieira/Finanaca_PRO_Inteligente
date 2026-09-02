@@ -1662,34 +1662,77 @@
             }
         }
 
+        // Resolve qual mês/ano abrir. Nunca "chuta" janeiro:
+        //   1º  o que este aparelho salvou por último (localStorage)
+        //   2º  o que veio da nuvem (Firestore)
+        //   3º  o mês/ano atual do calendário  <-- fallback garantido
+        // Devolve sempre { month: 0-11, year: 2000-2100 }.
+        function resolveOpenMonth(cloudMonth, cloudYear) {
+            const now = new Date();
+            const currentMonth = now.getMonth();          // 0 = jan ... 11 = dez
+            const currentYear  = now.getFullYear();
+
+            const isMonth = function (v) {
+                const n = Number(v);
+                return Number.isInteger(n) && n >= 0 && n <= 11;
+            };
+            const isYear = function (v) {
+                const n = Number(v);
+                return Number.isInteger(n) && n >= 2000 && n <= 2100;
+            };
+
+            // 1) preferência local deste aparelho
+            let localMonth = null, localYear = null;
+            try {
+                const rawM = localStorage.getItem('financaspro:lastMonth');
+                const rawY = localStorage.getItem('financaspro:lastYear');
+                if (rawM !== null && rawM !== '' && isMonth(rawM)) localMonth = Number(rawM);
+                if (rawY !== null && rawY !== '' && isYear(rawY))  localYear  = Number(rawY);
+            } catch (e) { /* modo anônimo / storage bloqueado: ignora */ }
+
+            // 2) valor da nuvem  3) mês/ano de hoje
+            const month = localMonth !== null ? localMonth
+                        : isMonth(cloudMonth) ? Number(cloudMonth)
+                        : currentMonth;
+
+            const year  = localYear !== null ? localYear
+                        : isYear(cloudYear)  ? Number(cloudYear)
+                        : currentYear;
+
+            return { month: month, year: year };
+        }
+
         // Firestore persistence — um único documento por cliente em users/{uid}
         function loadAppState(uid) {
             return db.collection('users').doc(uid).get().then(function(docSnap) {
                 if (docSnap.exists) {
                     appState = Object.assign(getDefaultAppState(), docSnap.data());
-                    // Retoma o mês em que o usuário estava; se o dado salvo for inválido
-                    // (contas antigas, valor corrompido), cai no mês atual do calendário.
-                    const savedMonth = Number(appState.currentMonthIndex);
-                    appState.currentMonthIndex = Number.isInteger(savedMonth) && savedMonth >= 0 && savedMonth <= 11
-                        ? savedMonth
-                        : new Date().getMonth();
-                    // A preferência local deste aparelho tem prioridade: é a última
-                    // ação do usuário aqui e não depende de sincronização com a nuvem
-                    // (essencial em conexão ruim ou app aberto por outro domínio).
-                    applyLocalViewPosition();
                 } else {
                     appState = getDefaultAppState();
-                    return saveAppState();
                 }
+
+                // Define o mês/ano a abrir: local do aparelho > nuvem > mês atual.
+                const pos = resolveOpenMonth(appState.currentMonthIndex, appState.currentYear);
+                appState.currentMonthIndex = pos.month;
+                appState.currentYear = pos.year;
+
+                // "não existe" só é confiável quando o servidor respondeu (não o cache
+                // offline vazio) — evita sobrescrever dados reais da nuvem com o padrão.
+                if (!docSnap.exists && !docSnap.metadata.fromCache) return saveAppState();
             }).catch(function(err) {
                 console.error("Erro ao carregar dados da nuvem:", err);
-                showToast("Erro ao carregar seus dados. Verifique sua conexão.", "fa-triangle-exclamation", "text-rose-500");
+                showToast("Sem conexão com a nuvem agora — abrindo onde você parou neste aparelho.", "fa-triangle-exclamation", "text-amber-500");
                 appState = getDefaultAppState();
+                // Mesmo sem nuvem: última posição deste aparelho ou, na falta dela, o mês atual.
+                const pos = resolveOpenMonth(appState.currentMonthIndex, appState.currentYear);
+                appState.currentMonthIndex = pos.month;
+                appState.currentYear = pos.year;
             });
         }
 
         function saveAppState() {
             if (!currentUser) return Promise.resolve();
+            persistViewPosition(); // qualquer gravação na nuvem também atualiza o ponteiro local do aparelho
             return db.collection('users').doc(currentUser.uid).set(appState).catch(function(err) {
                 console.error("Erro ao salvar dados na nuvem:", err);
                 showToast("Erro ao salvar suas alterações. Verifique sua conexão.", "fa-triangle-exclamation", "text-rose-500");
@@ -2996,21 +3039,7 @@
                 localStorage.setItem('financaspro:lastYear', String(appState.currentYear));
             } catch (e) {}
         }
-
-        function applyLocalViewPosition() {
-            try {
-                const rawM = localStorage.getItem('financaspro:lastMonth');
-                if (rawM !== null && rawM !== '') {
-                    const lm = Number(rawM);
-                    if (Number.isInteger(lm) && lm >= 0 && lm <= 11) appState.currentMonthIndex = lm;
-                }
-                const rawY = localStorage.getItem('financaspro:lastYear');
-                if (rawY !== null && rawY !== '') {
-                    const ly = Number(rawY);
-                    if (Number.isInteger(ly) && ly >= 2000 && ly <= 2100) appState.currentYear = ly;
-                }
-            } catch (e) {}
-        }
+        // A leitura da posição local agora é feita por resolveOpenMonth() (perto de loadAppState).
 
         function changeYear(delta) {
             appState.currentYear = Number(appState.currentYear) + delta;
