@@ -552,8 +552,13 @@
                 <div class="flex-grow border-t border-slate-200"></div>
             </div>
 
-            <button type="button" onclick="handleGoogleLogin()" class="w-full flex items-center justify-center gap-2 py-2.5 px-4 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors">
-                <i class="fa-brands fa-google text-red-500 text-sm"></i> Entrar com Google
+            <button type="button" onclick="handleGoogleLogin()" class="w-full flex items-center justify-center gap-2 py-3 px-4 border border-slate-300 rounded-xl text-sm font-bold text-slate-700 shadow-sm hover:shadow-md hover:border-slate-400 hover:bg-slate-50 transition-all">
+                <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 48 48" aria-hidden="true">
+                    <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
+                    <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
+                    <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
+                    <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
+                </svg> Entrar com Google
             </button>
         </div>
     </div>
@@ -650,7 +655,31 @@
 
         <!-- Month Navigation Bar -->
         <div class="bg-white border-b border-slate-200 shadow-sm sticky top-16 sm:top-[68px] z-20">
-            <div class="max-w-7xl mx-auto px-1 sm:px-2 flex items-center gap-1">
+            <!-- Mobile: seletores Mês e Ano lado a lado (▲ avança, ▼ volta; vira o ano ao passar de dez/jan) -->
+            <div class="sm:hidden max-w-7xl mx-auto px-3 py-2 flex items-stretch gap-2">
+                <div class="flex-1 flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl pl-3 pr-2 py-1.5">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Mês</span>
+                    <div class="flex items-center gap-1.5">
+                        <span class="font-extrabold text-slate-800 text-sm min-w-[76px] text-center" id="stepMonthLabel">Janeiro</span>
+                        <span class="flex flex-col">
+                            <button onclick="stepMonth(1)" class="text-slate-400 active:text-blue-600 leading-none py-1 px-1" aria-label="Próximo mês"><i class="fa-solid fa-chevron-up text-[11px]"></i></button>
+                            <button onclick="stepMonth(-1)" class="text-slate-400 active:text-blue-600 leading-none py-1 px-1" aria-label="Mês anterior"><i class="fa-solid fa-chevron-down text-[11px]"></i></button>
+                        </span>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl pl-3 pr-2 py-1.5 gap-1.5">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Ano</span>
+                    <div class="flex items-center gap-1.5">
+                        <span class="font-extrabold text-slate-800 text-sm min-w-[40px] text-center" id="stepYearLabel">2026</span>
+                        <span class="flex flex-col">
+                            <button onclick="changeYear(1)" class="text-slate-400 active:text-blue-600 leading-none py-1 px-1" aria-label="Próximo ano"><i class="fa-solid fa-chevron-up text-[11px]"></i></button>
+                            <button onclick="changeYear(-1)" class="text-slate-400 active:text-blue-600 leading-none py-1 px-1" aria-label="Ano anterior"><i class="fa-solid fa-chevron-down text-[11px]"></i></button>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <!-- Desktop: régua horizontal de meses -->
+            <div class="hidden sm:flex max-w-7xl mx-auto px-1 sm:px-2 items-center gap-1">
                 <button onclick="scrollMonthTabs(-1)" class="flex-shrink-0 text-slate-400 hover:text-blue-600 px-1.5 py-2" aria-label="Meses anteriores">
                     <i class="fa-solid fa-chevron-left"></i>
                 </button>
@@ -666,54 +695,73 @@
         </div>
 
         <main class="flex-grow max-w-7xl w-full mx-auto px-4 pt-6 pb-24 sm:px-6 sm:pb-6 lg:px-8">
-            
+
+            <!-- Período em foco (mês/ano dos cards abaixo) -->
+            <div class="flex items-baseline gap-2 mb-4">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Você está vendo</span>
+                <span class="text-lg sm:text-xl font-extrabold text-blue-700" id="currentPeriodLabel">Janeiro</span>
+                <span class="text-sm font-bold text-slate-400" id="currentPeriodYearLabel">2026</span>
+            </div>
+
             <!-- Summary Dashboard Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
                 <!-- Card Income -->
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between transition-all hover:shadow-md">
-                    <div>
-                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Receitas Totais</span>
-                        <h3 class="text-2xl font-extrabold text-blue-600 mt-1" id="sumIncome">R$ 0,00</h3>
-                        <span class="text-[10px] text-slate-400 mt-1 block">Entradas mensais</span>
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between gap-2 transition-all hover:shadow-md">
+                    <div class="min-w-0">
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Receitas Totais</span>
+                        <h3 class="text-xl font-extrabold text-blue-600 mt-1" id="sumIncome">R$ 0,00</h3>
+                        <span class="text-[10px] text-slate-400 mt-1 block">Entradas do mês</span>
                     </div>
-                    <div class="bg-blue-50 text-blue-600 p-3.5 rounded-2xl">
-                        <i class="fa-solid fa-arrow-up text-xl"></i>
-                    </div>
-                </div>
-
-                <!-- Card Expenses -->
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between transition-all hover:shadow-md">
-                    <div>
-                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Despesas Totais</span>
-                        <h3 class="text-2xl font-extrabold text-rose-600 mt-1" id="sumExpenses">R$ 0,00</h3>
-                        <span class="text-[10px] text-slate-400 mt-1 block">Contas + Cartões</span>
-                    </div>
-                    <div class="bg-rose-50 text-rose-600 p-3.5 rounded-2xl">
-                        <i class="fa-solid fa-arrow-down text-xl"></i>
+                    <div class="bg-blue-50 text-blue-600 p-3 rounded-2xl shrink-0">
+                        <i class="fa-solid fa-arrow-up text-lg"></i>
                     </div>
                 </div>
 
-                <!-- Card Credit Card Total -->
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between transition-all hover:shadow-md">
-                    <div>
-                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Faturas de Cartões</span>
-                        <h3 class="text-2xl font-extrabold text-indigo-600 mt-1" id="sumCardsSummary">R$ 0,00</h3>
-                        <span class="text-[10px] text-slate-400 mt-1 block">Total mensal consolidado</span>
+                <!-- Card Fixed Expenses -->
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between gap-2 transition-all hover:shadow-md">
+                    <div class="min-w-0">
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Despesas Fixas</span>
+                        <h3 class="text-xl font-extrabold text-rose-600 mt-1" id="sumFixedExpenses">R$ 0,00</h3>
+                        <span class="text-[10px] text-slate-400 mt-1 block">Contas (sem cartões)</span>
                     </div>
-                    <div class="bg-indigo-50 text-indigo-600 p-3.5 rounded-2xl">
-                        <i class="fa-solid fa-credit-card text-xl"></i>
+                    <div class="bg-rose-50 text-rose-600 p-3 rounded-2xl shrink-0">
+                        <i class="fa-solid fa-file-invoice-dollar text-lg"></i>
+                    </div>
+                </div>
+
+                <!-- Card Credit Card Expenses -->
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between gap-2 transition-all hover:shadow-md">
+                    <div class="min-w-0">
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Despesas Cartões</span>
+                        <h3 class="text-xl font-extrabold text-rose-600 mt-1" id="sumCardsSummary">R$ 0,00</h3>
+                        <span class="text-[10px] text-slate-400 mt-1 block">Faturas consolidadas</span>
+                    </div>
+                    <div class="bg-rose-50 text-rose-600 p-3 rounded-2xl shrink-0">
+                        <i class="fa-solid fa-credit-card text-lg"></i>
+                    </div>
+                </div>
+
+                <!-- Card Total Expenses (destaque) -->
+                <div class="bg-rose-600 p-4 rounded-2xl shadow-md shadow-rose-600/30 border border-rose-600 flex items-center justify-between gap-2 transition-all hover:shadow-lg">
+                    <div class="min-w-0">
+                        <span class="text-[11px] font-bold text-rose-100 uppercase tracking-wider">Despesas Totais</span>
+                        <h3 class="text-xl font-extrabold text-white mt-1" id="sumExpenses">R$ 0,00</h3>
+                        <span class="text-[10px] text-rose-100/90 mt-1 block">Fixas + cartões</span>
+                    </div>
+                    <div class="bg-white/20 text-white p-3 rounded-2xl shrink-0">
+                        <i class="fa-solid fa-arrow-down text-lg"></i>
                     </div>
                 </div>
 
                 <!-- Card Final Balance -->
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between transition-all hover:shadow-md">
-                    <div>
-                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Saldo Líquido</span>
-                        <h3 class="text-2xl font-extrabold mt-1 text-slate-800" id="netBalance">R$ 0,00</h3>
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between gap-2 transition-all hover:shadow-md">
+                    <div class="min-w-0">
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Saldo Líquido</span>
+                        <h3 class="text-xl font-extrabold mt-1 text-slate-800" id="netBalance">R$ 0,00</h3>
                         <span class="text-[10px] text-slate-400 mt-1 block" id="balanceStatus">Calculando...</span>
                     </div>
-                    <div class="p-3.5 rounded-2xl bg-slate-100 text-slate-500" id="balanceIconContainer">
-                        <i class="fa-solid fa-scale-balanced text-xl" id="balanceIcon"></i>
+                    <div class="p-3 rounded-2xl bg-slate-100 text-slate-500 shrink-0" id="balanceIconContainer">
+                        <i class="fa-solid fa-scale-balanced text-lg" id="balanceIcon"></i>
                     </div>
                 </div>
             </div>
@@ -2576,15 +2624,39 @@
         }
 
         function renderMonthTabs() {
+            let selectedBtn = null;
             monthsNames.forEach((name, idx) => {
                 const btn = document.getElementById(`tabMonth-${idx}`);
                 if (!btn) return;
                 const isSelected = idx === appState.currentMonthIndex;
-                btn.className = `flex-1 min-w-[100px] text-center py-2.5 px-3 border-b-2 font-bold text-xs sm:text-sm whitespace-nowrap transition-all duration-150 ${
-                    isSelected ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                btn.className = `flex-1 min-w-[100px] text-center py-2 px-3 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap transition-all duration-150 ${
+                    isSelected
+                        ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 -translate-y-0.5'
+                        : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
                 }`;
                 btn.textContent = name;
+                if (isSelected) selectedBtn = btn;
             });
+            // Traz o mês ativo para a vista só quando ele está fora da área rolável
+            const scroller = document.getElementById('monthTabsScroller');
+            if (selectedBtn && scroller) {
+                const sRect = scroller.getBoundingClientRect();
+                const bRect = selectedBtn.getBoundingClientRect();
+                if (bRect.left < sRect.left || bRect.right > sRect.right) {
+                    scroller.scrollLeft += (bRect.left + bRect.right) / 2 - (sRect.left + sRect.right) / 2;
+                }
+            }
+            // Rótulo do período em foco, acima dos cards
+            const monthName = monthsNames[appState.currentMonthIndex] || '';
+            const pLabel = document.getElementById('currentPeriodLabel');
+            const pYear = document.getElementById('currentPeriodYearLabel');
+            if (pLabel) pLabel.textContent = monthName;
+            if (pYear) pYear.textContent = appState.currentYear;
+            // Seletores Mês/Ano do topo (mobile)
+            const sM = document.getElementById('stepMonthLabel');
+            const sY = document.getElementById('stepYearLabel');
+            if (sM) sM.textContent = monthName;
+            if (sY) sY.textContent = appState.currentYear;
         }
 
         function renderStatsCards() {
@@ -2604,8 +2676,9 @@
             const net = sumInc - totalExpenses;
 
             document.getElementById('sumIncome').textContent = formatCurrency(sumInc);
-            document.getElementById('sumExpenses').textContent = formatCurrency(totalExpenses);
+            document.getElementById('sumFixedExpenses').textContent = formatCurrency(sumExp);
             document.getElementById('sumCardsSummary').textContent = formatCurrency(sumCrd);
+            document.getElementById('sumExpenses').textContent = formatCurrency(totalExpenses);
             document.getElementById('netBalance').textContent = formatCurrency(net);
 
             const cardContainer = document.getElementById('balanceIconContainer');
@@ -2614,19 +2687,19 @@
             const netBalanceEl = document.getElementById('netBalance');
 
             if (net > 0) {
-                netBalanceEl.className = "text-2xl font-extrabold text-emerald-600 mt-1";
-                cardContainer.className = "bg-emerald-50 text-emerald-600 p-3.5 rounded-2xl";
-                icon.className = "fa-solid fa-face-smile text-xl";
+                netBalanceEl.className = "text-xl font-extrabold text-blue-600 mt-1";
+                cardContainer.className = "bg-blue-50 text-blue-600 p-3 rounded-2xl shrink-0";
+                icon.className = "fa-solid fa-face-smile text-lg";
                 statusText.textContent = "Superávit! Excelente balanço.";
             } else if (net < 0) {
-                netBalanceEl.className = "text-2xl font-extrabold text-rose-600 mt-1";
-                cardContainer.className = "bg-rose-50 text-rose-600 p-3.5 rounded-2xl";
-                icon.className = "fa-solid fa-face-frown-open text-xl";
+                netBalanceEl.className = "text-xl font-extrabold text-rose-600 mt-1";
+                cardContainer.className = "bg-rose-50 text-rose-600 p-3 rounded-2xl shrink-0";
+                icon.className = "fa-solid fa-face-frown-open text-lg";
                 statusText.textContent = "Déficit! Atenção às despesas.";
             } else {
-                netBalanceEl.className = "text-2xl font-extrabold text-slate-700 mt-1";
-                cardContainer.className = "bg-slate-100 text-slate-500 p-3.5 rounded-2xl";
-                icon.className = "fa-solid fa-scale-balanced text-xl";
+                netBalanceEl.className = "text-xl font-extrabold text-slate-700 mt-1";
+                cardContainer.className = "bg-slate-100 text-slate-500 p-3 rounded-2xl shrink-0";
+                icon.className = "fa-solid fa-scale-balanced text-lg";
                 statusText.textContent = "Equilibrado em zero.";
             }
 
@@ -2742,17 +2815,23 @@
         }
 
         function changeCardLedgerMobileMonth(delta) {
-            cardLedgerMobileMonth = (cardLedgerMobileMonth + delta + 12) % 12;
-            renderCreditCardsAnualLedger();
+            appState.currentMonthIndex = (appState.currentMonthIndex + delta + 12) % 12;
+            persistViewPosition();
+            saveAppState();
+            renderAll();
         }
 
         function setCardLedgerMobileMonth(value) {
-            cardLedgerMobileMonth = Number(value);
-            renderCreditCardsAnualLedger();
+            appState.currentMonthIndex = Number(value);
+            persistViewPosition();
+            saveAppState();
+            renderAll();
         }
 
         function renderCreditCardsAnualLedger() {
             const year = appState.currentYear;
+            // Mês do bloco de cartões (mobile) é o mesmo mês selecionado no resto do app
+            cardLedgerMobileMonth = appState.currentMonthIndex;
             const tbody = document.getElementById('cardsLedgerBody');
             tbody.innerHTML = '';
             const activeCards = appState.yearsData[year].categories.cards;
@@ -3063,6 +3142,20 @@
             renderAll();
         }
 
+        // Passo mensal do seletor mobile: ▲ avança, ▼ volta; vira o ano ao cruzar dez/jan
+        function stepMonth(delta) {
+            let m = appState.currentMonthIndex + delta;
+            let y = Number(appState.currentYear) || new Date().getFullYear();
+            if (m > 11) { m = 0; y += 1; }
+            else if (m < 0) { m = 11; y -= 1; }
+            appState.currentMonthIndex = m;
+            appState.currentYear = y;
+            syncYearInput();
+            persistViewPosition();
+            saveAppState();
+            renderAll();
+        }
+
         function updateInputValue(type, key, value) {
             const year = appState.currentYear;
             const month = appState.currentMonthIndex;
@@ -3082,6 +3175,9 @@
             }
 
             monthObj.cards[card] = parseMoney(value);
+            // Mês mexido no cartão vira o mês selecionado em todo o app (abas, "Geral do Mês", rótulo)
+            appState.currentMonthIndex = monthIndex;
+            persistViewPosition();
             saveAppState();
             renderAll();
 

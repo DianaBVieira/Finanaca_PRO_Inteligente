@@ -21,7 +21,15 @@
         "deploy_log.txt",
         "docs/**",
         "js/**",
-        "styles/**"
+        "styles/**",
+        "staging_pagina_links_utopia/**",
+        "staging_site_pulso_utopia/**",
+        "materiais_instagram/**",
+        "assets/Design sem nome.png",
+        "assets/hero-financaspro-para-canva.png",
+        "assets/hero-financaspro-transparent.png",
+        "assets/hero-financaspro-v3.png",
+        "assets/hero-financaspro.png"
       ],
       "redirects": [
         {
@@ -55,7 +63,15 @@
         "deploy_log.txt",
         "docs/**",
         "js/**",
-        "styles/**"
+        "styles/**",
+        "staging_pagina_links_utopia/**",
+        "staging_site_pulso_utopia/**",
+        "materiais_instagram/**",
+        "assets/Design sem nome.png",
+        "assets/hero-financaspro-para-canva.png",
+        "assets/hero-financaspro-transparent.png",
+        "assets/hero-financaspro-v3.png",
+        "assets/hero-financaspro.png"
       ]
     }
   ]
